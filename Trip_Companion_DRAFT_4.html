@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trip Companion — Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --surface:#F7F7F8;
+    --surface-2:#F0F0F2;
+    --border:#E7E7EA;
+    --ink:#16161A;
+    --ink-soft:#71717A;
+    --ink-faint:#A8A8AF;
+    --accent:#2F6FED;
+    --accent-soft:#EAF1FE;
+    --florence:#E8863B;
+    --cruise:#1C8C8C;
+    --rome:#9B6FD1;
+    --cantmiss:#E5484D;
+    --cantmiss-soft:#FDEBEC;
+    --green:#2F9E44;
+    --green-soft:#EAF7EC;
+    --gold:#C9861A;
+    --gold-soft:#FBF1DF;
+    --meal-bg:#FDEEE6;
+    --meal-accent:#D97757;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+
+  /* ---------- Top bar (compact) ---------- */
+  header.topbar{
+    position:sticky; top:0; z-index:30;
+    background:rgba(255,255,255,0.96);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-row{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px 8px;
+  }
+  .menu-btn{
+    flex:0 0 auto;
+    width:34px; height:34px; border-radius:9px;
+    background:var(--surface); border:none;
+    font-size:15px; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .trip-title-compact{ flex:1; min-width:0; }
+  .trip-name{ font-size:14.5px; font-weight:800; line-height:1.2; }
+  .trip-dates{ font-size:11px; color:var(--ink-soft); font-weight:600; margin-top:1px; }
+
+  /* ---------- Date strip: block-grouped ---------- */
+  .date-strip-wrap{ padding:0 0 9px; }
+  .date-strip{
+    display:flex; align-items:flex-end; gap:5px;
+    overflow-x:auto;
+    padding:2px 14px 3px;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+  }
+  .date-strip::-webkit-scrollbar{display:none;}
+  .block-sep{
+    flex:0 0 auto;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    padding-bottom:9px; margin:0 2px;
+  }
+  .block-sep .sep-label{
+    writing-mode:vertical-rl; text-orientation:mixed;
+    font-size:8.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+    color:#fff; padding:5px 2px; border-radius:5px;
+  }
+  .block-sep.block-florence .sep-label{background:var(--florence);}
+  .block-sep.block-cruise .sep-label{background:var(--cruise);}
+  .block-sep.block-rome .sep-label{background:var(--rome);}
+
+  .chip{
+    flex:0 0 auto;
+    scroll-snap-align:start;
+    width:42px;
+    border-radius:9px 9px 4px 4px;
+    background:var(--surface);
+    padding:6px 0 0;
+    text-align:center;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+  }
+  .chip.block-florence{border-bottom-color:var(--florence);}
+  .chip.block-cruise{border-bottom-color:var(--cruise);}
+  .chip.block-rome{border-bottom-color:var(--rome);}
+  .chip .dow{
+    font-size:8.5px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--ink-faint); font-weight:700;
+  }
+  .chip .dom{
+    font-size:14.5px; font-weight:700; line-height:1.5; color:var(--ink);
+  }
+  .chip.active{ background:var(--ink); }
+  .chip.active .dow{ color:rgba(255,255,255,0.6); }
+  .chip.active .dom{ color:#fff; }
+
+  /* ---------- Today banner ---------- */
+  .today-banner{
+    margin:0 18px 4px;
+    padding:10px 14px;
+    background:var(--accent-soft);
+    border-radius:10px;
+    font-size:12.5px;
+    color:var(--ink);
+    font-weight:500;
+  }
+  .today-banner strong{font-weight:800;}
+
+  /* ---------- Day section ---------- */
+  main{padding:20px 18px 0;}
+  .lbl-dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+  .block-florence .lbl-dot{background:var(--florence);} .block-florence{color:var(--florence);}
+  .block-cruise .lbl-dot{background:var(--cruise);} .block-cruise{color:var(--cruise);}
+  .block-rome .lbl-dot{background:var(--rome);} .block-rome{color:var(--rome);}
+
+  .day-header h2{
+    margin:0 0 5px; font-size:23px; font-weight:800; letter-spacing:-0.01em; line-height:1.2;
+  }
+  .day-header h2.block-florence{color:var(--florence);}
+  .day-header h2.block-cruise{color:var(--cruise);}
+  .day-header h2.block-rome{color:var(--rome);}
+  .day-sub{
+    display:flex; align-items:flex-start; gap:9px;
+    font-size:16.5px; color:var(--ink); margin-bottom:16px; font-weight:700; line-height:1.4;
+  }
+  .day-sub .accent-bar{
+    flex:0 0 3px; width:3px; border-radius:2px; align-self:stretch; margin-top:2px;
+  }
+  .day-sub.block-florence .accent-bar{background:var(--florence);}
+  .day-sub.block-cruise .accent-bar{background:var(--cruise);}
+  .day-sub.block-rome .accent-bar{background:var(--rome);}
+
+  .day-toolbar{
+    display:flex; justify-content:flex-end; margin-bottom:14px;
+  }
+  .expand-toggle{
+    font-family:'Manrope',sans-serif; font-size:12px; font-weight:700;
+    background:var(--surface); border:none; border-radius:20px;
+    padding:7px 13px; color:var(--ink-soft); cursor:pointer;
+  }
+  .expand-toggle:active{background:var(--surface-2);}
+
+  .route-link{
+    display:flex; align-items:center; gap:8px;
+    background:var(--ink); color:#fff;
+    border-radius:10px; padding:12px 14px; margin-bottom:10px;
+    text-decoration:none; font-size:13.5px; font-weight:700;
+  }
+  .route-link:last-of-type{ margin-bottom:18px; }
+  .route-link.secondary{
+    background:var(--surface-2); color:var(--ink); font-size:12.5px; padding:10px 14px;
+  }
+
+  .driver-box{
+    background:var(--gold-soft); border-radius:10px; padding:11px 14px; margin-bottom:14px;
+  }
+  .driver-title{ font-size:13px; font-weight:800; color:var(--gold); margin-bottom:3px; }
+  .driver-line{ font-size:12.5px; font-weight:600; color:#8A5D0F; }
+
+  .getting-here{
+    margin:8px 0 8px 28px;
+    font-size:12px; color:var(--ink-faint); font-weight:600;
+    display:flex; align-items:flex-start; gap:5px;
+  }
+  .gh-icon{ color:var(--ink-faint); flex:0 0 auto; }
+
+  /* ---------- Timeline + stop cards ---------- */
+  .timeline-item{
+    display:flex; gap:12px; position:relative;
+  }
+  .rail{
+    flex:0 0 16px;
+    display:flex; flex-direction:column; align-items:center;
+    padding-top:19px;
+  }
+  .rail-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--ink-faint); flex-shrink:0;
+  }
+  .timeline-item.cantmiss .rail-dot{ background:var(--cantmiss); }
+  .rail-line{
+    width:1.5px; flex:1;
+    background:var(--border);
+    margin-top:4px;
+  }
+  .timeline-item:last-child .rail-line{ display:none; }
+
+  .stop{
+    flex:1; min-width:0;
+    background:var(--surface);
+    border-radius:var(--radius);
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  .stop-head{
+    display:flex; align-items:flex-start; gap:10px;
+    padding:13px 14px;
+    cursor:pointer;
+  }
+  .stop-time{
+    font-size:12px; font-weight:700; color:var(--ink-soft);
+    white-space:nowrap; padding-top:2px; min-width:50px;
+  }
+  .stop-main{flex:1; min-width:0;}
+  .stop-name{
+    font-weight:700; font-size:15.5px; line-height:1.3; color:var(--ink);
+  }
+  .stop-meta{
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:7px;
+  }
+  .badge{
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px;
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .badge.ticketed{background:var(--gold-soft); color:var(--gold);}
+  .badge.free{background:var(--green-soft); color:var(--green);}
+  .badge.outside{background:var(--surface-2); color:var(--ink-soft);}
+  .badge.duration{background:transparent; color:var(--ink-faint); padding:3px 0; font-weight:600;}
+  .maps-chip{
+    font-size:11px; font-weight:700; color:var(--accent);
+    display:inline-flex; align-items:center; gap:3px;
+    text-decoration:none;
+  }
+  .chevron{
+    color:var(--ink-soft); font-size:20px; font-weight:700; line-height:1;
+    padding-top:1px; flex:0 0 auto;
+    width:24px; height:24px;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .2s ease;
+  }
+  .stop.open .chevron{transform:rotate(180deg);}
+
+  .stop-body{
+    max-height:0; overflow:hidden;
+    transition:max-height .28s ease;
+  }
+  .stop.open .stop-body{max-height:800px;}
+  .stop-body-inner{ padding:0 14px 16px; }
+  .stop-photo{
+    width:100%; aspect-ratio:16/9; border-radius:10px; margin-bottom:12px;
+    background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-faint); font-size:12px; font-weight:600;
+  }
+  .stop-desc{
+    font-size:14px; line-height:1.6; color:var(--ink); font-weight:450;
+  }
+  .stop-warning{
+    margin-top:10px; padding:9px 11px; background:var(--gold-soft);
+    border-radius:8px; font-size:12.5px; line-height:1.45; color:#8A5D0F; font-weight:600;
+  }
+  .stop-ticket{
+    margin-top:10px; font-size:12.5px; font-weight:700;
+  }
+  .stop-ticket a{color:var(--accent);}
+
+  /* ---------- Section divider ---------- */
+  .section-divider{
+    font-weight:800; font-size:12.5px;
+    text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-faint);
+    margin:20px 0 10px 28px;
+  }
+
+  /* ---------- Menu overlay ---------- */
+  .menu-overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(22,22,26,0.4);
+    display:none;
+  }
+  .menu-overlay.open{ display:block; }
+  .menu-panel{
+    position:absolute; top:0; left:0; right:0;
+    height:92vh;
+    background:#fff;
+    border-radius:0 0 20px 20px;
+    display:flex; flex-direction:column;
+    transform:translateY(-100%);
+    transition:transform .25s ease;
+  }
+  .menu-overlay.open .menu-panel{ transform:translateY(0); }
+  .menu-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 10px;
+    flex:0 0 auto;
+  }
+  .menu-header h3{ margin:0; font-size:17px; font-weight:800; }
+  .menu-close{
+    width:30px; height:30px; border-radius:50%; border:none;
+    background:var(--surface); font-size:13px; color:var(--ink-soft); cursor:pointer;
+  }
+  .menu-tabs{
+    display:flex; gap:6px; padding:2px 14px 12px;
+    flex:0 0 auto;
+    border-bottom:1px solid var(--border);
+  }
+  .menu-tab{
+    font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:700;
+    background:var(--surface); border:none; border-radius:20px;
+    padding:8px 14px; color:var(--ink-soft); cursor:pointer;
+  }
+  .menu-tab.active{ background:var(--ink); color:#fff; }
+  .menu-content{
+    flex:1; overflow-y:auto;
+    padding:16px 18px 40px;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Itinerary list inside menu */
+  .glance-block-header{
+    font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+    padding:16px 4px 8px; display:flex; align-items:center; gap:6px;
+  }
+  .glance-block-header:first-child{ padding-top:0; }
+  .glance-row{
+    display:flex; gap:10px; align-items:center;
+    padding:12px 10px; border-radius:10px; cursor:pointer;
+    background:var(--surface); margin-bottom:6px;
+  }
+  .glance-row:active{ background:var(--surface-2); }
+  .glance-date{ font-size:12px; font-weight:800; color:var(--ink-soft); width:52px; flex:0 0 auto; line-height:1.3; }
+  .glance-desc{ font-size:13.5px; font-weight:600; color:var(--ink); flex:1; line-height:1.35; }
+  .glance-chevron{ font-size:16px; color:var(--ink-faint); flex:0 0 auto; }
+
+  /* Sub-tabs (bookings) */
+  .subtabs{ display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
+  .subtab{
+    font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:700;
+    background:var(--surface); border:none; border-radius:16px;
+    padding:6px 11px; color:var(--ink-soft); cursor:pointer;
+  }
+  .subtab.active{ background:var(--accent-soft); color:var(--accent); }
+
+  .book-row{
+    padding:11px 12px; background:var(--surface); border-radius:10px; margin-bottom:8px;
+  }
+  .book-row .b-what{ font-size:13.5px; font-weight:700; }
+  .book-row .b-meta{ font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-top:4px; }
+  .status-pill{
+    display:inline-block; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:10px; margin-right:6px;
+  }
+  .status-pill.booked{ background:var(--green-soft); color:var(--green); }
+  .status-pill.tobook{ background:var(--gold-soft); color:var(--gold); }
+
+  .meals-table{ width:100%; border-collapse:collapse; font-size:10.5px; }
+  .meals-table th{
+    text-align:left; font-weight:800; color:var(--ink-faint); font-size:10px;
+    padding:6px 4px; border-bottom:2px solid var(--border);
+  }
+  .meals-table td{
+    padding:7px 4px; border-bottom:1px solid var(--border); vertical-align:top;
+    line-height:1.35; font-weight:500;
+  }
+  .meals-table td.meal-date{ font-weight:800; white-space:nowrap; color:var(--ink); }
+  .meals-table tr:nth-child(even) td{ background:var(--surface); }
+
+  /* ---------- Day map ---------- */
+  .day-map-wrap{ margin-bottom:16px; }
+  .map-toggle-row{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .map-toggle-btn{
+    font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:700;
+    background:var(--surface); border:none; border-radius:16px;
+    padding:6px 12px; color:var(--ink-soft); cursor:pointer;
+  }
+  .map-toggle-btn.active{ background:var(--ink); color:#fff; }
+  .day-map{
+    width:100%; height:220px; border-radius:12px; overflow:hidden;
+    background:var(--surface);
+  }
+  .leaflet-popup-content{ font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:600; }
+  .leaflet-popup-content b{ font-weight:800; }
+
+  /* ---------- Trip-wide map (Itinerary tab) ---------- */
+  .itin-subtoggle{ display:flex; gap:6px; margin-bottom:14px; }
+  .trip-map{
+    width:100%; height:340px; border-radius:12px; overflow:hidden;
+    background:var(--surface); margin-bottom:10px;
+  }
+  .trip-map-legend{
+    display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; font-weight:600; color:var(--ink-soft);
+    padding:0 2px;
+  }
+  .trip-map-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .leg-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+  .info-block{ margin-bottom:20px; }
+  .info-block h4{ font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin:0 0 8px; font-weight:800; }
+  .info-line{ font-size:13.5px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .info-line b{ font-weight:700; }
+  .contact-card{
+    background:var(--surface); border-radius:12px; padding:14px; font-size:13px; line-height:1.7;
+  }
+  .contact-card .c-name{ font-weight:800; font-size:14px; margin-bottom:2px; }
+
+  /* ---------- Meal cards (distinct from landmarks) ---------- */
+  .stop.meal{
+    background:var(--meal-bg);
+  }
+  .timeline-item.meal .rail-dot{
+    background:var(--meal-accent);
+  }
+  .meal-icon{ font-size:14px; margin-right:2px; }
+
+  /* ---------- Intro / city context section ---------- */
+  .intro-card{
+    background:var(--accent-soft);
+    border-radius:var(--radius);
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .intro-head{
+    display:flex; align-items:center; gap:10px;
+    padding:13px 14px;
+    cursor:pointer;
+  }
+  .intro-head .intro-icon{ font-size:16px; }
+  .intro-head .intro-title{ flex:1; font-weight:800; font-size:14.5px; color:var(--ink); }
+  .intro-head .chevron{ padding-top:0; }
+  .intro-body{ max-height:0; overflow:hidden; transition:max-height .28s ease; }
+  .intro-card.open .intro-body{ max-height:1000px; }
+  .intro-body-inner{ padding:0 14px 16px; }
+  .intro-photo{
+    width:100%; aspect-ratio:16/9; border-radius:10px; margin-bottom:12px;
+    background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-faint); font-size:12px; font-weight:600;
+  }
+  .intro-text{ font-size:14px; line-height:1.65; color:var(--ink); font-weight:450; }
+
+  footer{
+    text-align:center; font-size:11px; color:var(--ink-faint); padding:30px 18px 10px; font-weight:500;
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <button class="menu-btn" onclick="openMenu()">☰</button>
+    <div class="trip-title-compact">
+      <div class="trip-name">Italy, Croatia &amp; Montenegro</div>
+      <div class="trip-dates">Jun 5–30, 2027 · Draft</div>
+    </div>
+  </div>
+  <div class="date-strip-wrap">
+    <div class="date-strip" id="dateStrip"></div>
+  </div>
+</header>
+
+<div class="menu-overlay" id="menuOverlay" onclick="if(event.target===this)closeMenu()">
+  <div class="menu-panel">
+    <div class="menu-header">
+      <h3>Menu</h3>
+      <button class="menu-close" onclick="closeMenu()">✕</button>
+    </div>
+    <div class="menu-tabs">
+      <button class="menu-tab active" data-tab="itinerary" onclick="switchMenuTab('itinerary')">Itinerary</button>
+      <button class="menu-tab" data-tab="bookings" onclick="switchMenuTab('bookings')">Bookings</button>
+      <button class="menu-tab" data-tab="contacts" onclick="switchMenuTab('contacts')">Contacts</button>
+      <button class="menu-tab" data-tab="info" onclick="switchMenuTab('info')">Info</button>
+    </div>
+    <div class="menu-content" id="menuContent"></div>
+  </div>
+</div>
+
+<div class="today-banner" id="todayBanner"></div>
+
+<main id="dayContainer"></main>
+
+<footer>Draft build — placeholder content throughout, for review only.</footer>
+
+<script>
+// ======================= DUMMY DATA (placeholder only) =======================
+const TRIP_START = new Date(2027, 5, 5);
+const TRIP_END   = new Date(2027, 5, 30);
+
+const days = [
+  { date: new Date(2027,5,5), block: "florence", title: "Depart Miami", sub: "AA38 overnight flight to Rome. Conf: OYEQDQ.",
+    cityPins: [],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,6), block: "florence", title: "Arrive Florence", sub: "Arrive Florence",
+    cityPins: [{"lat":43.7696,"lng":11.2558,"name":"Florence"}],
+    context: "Florence was the birthplace of the Renaissance — the 15th-century explosion of art, architecture, and humanist thought that reshaped Western culture, fueled by the wealth and patronage of the Medici banking family. For over a thousand years it has drawn people to walk the same stone streets as Michelangelo, Dante, and Machiavelli. Your hotel sits in the heart of the historic center, a UNESCO World Heritage Site since 1982 — everything you'll see this week is within a comfortable walk.",
+    routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Cattedrale+di+Santa+Maria+del+Fiore+Florence/Ponte+Vecchio+Florence/Piazza+della+Signoria+Florence/",
+    townRoutes: null,
+    driverToday: false,
+    stops: [{"time":"Breakfast","name":"Breakfast — on the overnight flight","type":"meal","desc":"Served before landing."},{"time":"12:05pm","name":"Leonardo Express + Frecciarossa","cantMiss":false,"duration":"~2 hrs total transit","access":"outside","mapLink":null,"desc":"FCO airport to Roma Termini (~32 min), then Rome to Florence (~1h30) — the fastest, most comfortable route after an overnight flight.","ticket":"Ticket info","warning":null,"gettingHere":null},{"time":"~4:15pm","name":"Taxi to Hotel Davanzati","type":"meal","icon":"🚕","desc":"Ring the bell for help with the 26 steps up to reception."},{"time":"6:00pm","name":"Sunday Mass — Duomo","coords":[43.7731,11.256],"cantMiss":false,"duration":"~45 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Cattedrale+di+Santa+Maria+del+Fiore","desc":"The cathedral interior is reserved for prayer on Sundays — attending Mass is the only way to see inside the cathedral on this day.","ticket":null,"warning":null,"gettingHere":"5 min walk from the hotel"},{"time":"7:00pm","name":"Ponte Vecchio","coords":[43.768,11.2531],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Ponte+Vecchio+Florence","desc":"Florence's oldest bridge, first built in Roman times and rebuilt after a 1345 flood. It's the only Florentine bridge to survive World War II — legend holds Hitler ordered it spared. Lined with jewelers' shops since 1593, when the Medici evicted the butchers whose refuse was fouling the river.","ticket":null,"warning":null,"gettingHere":"5 min walk from the Duomo"},{"time":"7:20pm","name":"Piazza della Signoria","coords":[43.7696,11.2558],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Signoria+Florence","desc":"The political heart of Florence since the 14th century, dominated by the fortress-like Palazzo Vecchio. This is where Savonarola's 'Bonfire of the Vanities' burned art and books in 1497, and where he himself was executed the following year.","ticket":null,"warning":null,"gettingHere":"3 min walk from Ponte Vecchio"},{"time":"Dinner","name":"Dinner — near the hotel","type":"meal","desc":"TBD, first night, keep it easy."}]
+  },
+  { date: new Date(2027,5,7), block: "florence", title: "Florence: Accademia, Santa Maria Novella, Duomo Complex", sub: "Florence: Accademia, Santa Maria Novella, Duomo Complex",
+    cityPins: [{"lat":43.7696,"lng":11.2558,"name":"Florence"}],
+    context: "Today covers three of the sights that define Florence's Renaissance identity — walked as one continuous sweep from north to south, with no backtracking.",
+    routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Galleria+dell%27Accademia+Florence/Santa+Maria+Novella+Florence/Cattedrale+di+Santa+Maria+del+Fiore+Florence/",
+    townRoutes: null,
+    driverToday: false,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:00am","name":"Accademia Gallery — David","coords":[43.7767,11.2588],"cantMiss":true,"duration":"60-90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Galleria+dell%27Accademia+Florence","desc":"Michelangelo carved David from a single 17-foot block of Carrara marble that two earlier sculptors had already given up on as flawed. He was 26. Finished in 1504, the statue originally stood outside Palazzo Vecchio as a civic symbol — Florence, like David, defiant against more powerful enemies (Rome, Milan). The gallery also holds his four unfinished 'Prisoners,' figures seemingly still trapped inside the stone, and a long corridor of Florentine Gothic and early Renaissance paintings.","ticket":"🎟️ Book 6-8 weeks ahead for June","warning":"Same-day walk-up queues run 2+ hours in peak season","gettingHere":null},{"time":"10:50am","name":"Santa Maria Novella","coords":[43.7737,11.2486],"cantMiss":true,"duration":"45 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Santa+Maria+Novella+Florence","desc":"The principal Dominican church in Florence, its striking green-and-white marble facade designed by Leon Battista Alberti in the 1450s. Inside is Masaccio's Trinity (1427), the first painting in Western art to use mathematically correct linear perspective — visitors at the time reportedly thought there was a real hole in the wall. Ghirlandaio's fresco cycle in the main chapel is said to have influenced the young Michelangelo, who trained in his workshop.","ticket":"🎟️ ~€7.50","warning":null,"gettingHere":"~20 min walk southwest from the Accademia"},{"time":"12:15pm","name":"Lunch — near the Duomo","type":"meal","desc":"TBD."},{"time":"1:15pm","name":"Duomo interior + Baptistery","coords":[43.7731,11.2554],"cantMiss":true,"duration":"60-75 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Cattedrale+di+Santa+Maria+del+Fiore","desc":"The cathedral itself is free to walk into — a vast, deliberately austere Gothic interior, a striking contrast to the ornate marble exterior. Brunelleschi's dome soars overhead, still the largest masonry dome ever built, completed in 1436 without the flying buttresses or visible scaffolding that engineers of the time thought were required. The adjacent Baptistery, older than the cathedral itself, holds Ghiberti's gilded bronze doors, which Michelangelo nicknamed the 'Gates of Paradise.'","ticket":"🚪 Free (Baptistery ticketed separately, small fee)","warning":null,"gettingHere":"~17 min walk east from Santa Maria Novella"},{"time":"2:30pm","name":"Campanile di Giotto — climb","coords":[43.773,11.2558],"cantMiss":true,"duration":"40-50 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Campanile+di+Giotto+Florence","desc":"Giotto's bell tower, begun in 1334 — 414 steps up a straight tower with landings to rest along the way, notably easier than the dome climb next door. No advance timed-slot required. The real payoff: this is the one spot in the whole complex where you can actually see Brunelleschi's dome itself, up close — the famous silhouette you can't see while standing on top of it.","ticket":"🎟️ Duomo complex pass — no advance booking needed","warning":null,"gettingHere":"Right next to the Duomo, same piazza"},{"time":"Evening","name":"Dinner — historic center","type":"meal","desc":"TBD."}]
+  },
+  { date: new Date(2027,5,8), block: "florence", title: "Florence: Uffizi, Piazza della Signoria, Santa Croce, Pitti, Boboli, Sunset", sub: "Florence: Uffizi, Piazza della Signoria, Santa Croce, Pitti, Boboli, Sunset",
+    cityPins: [{"lat":43.7696,"lng":11.2558,"name":"Florence"}],
+    context: "The Renaissance-art day, crossing the Arno into Oltrarno for the Medici's grand garden, ending with two passes at Piazzale Michelangelo.",
+    routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Uffizi+Gallery+Florence/Piazza+della+Signoria+Florence/Basilica+di+Santa+Croce+Florence/Palazzo+Pitti+Florence/Boboli+Gardens+Florence/Piazzale+Michelangelo+Florence/",
+    townRoutes: null,
+    driverToday: false,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:00am","name":"Uffizi Gallery","coords":[43.7678,11.2553],"cantMiss":true,"duration":"2.5-3 hrs","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Uffizi+Gallery+Florence","desc":"Built in 1560 as the Medici's administrative offices ('uffizi'), converted to a gallery by the family in the 16th century — one of the first museums in the modern sense. Home to Botticelli's Birth of Venus and Primavera, Leonardo's Annunciation, and a collection that traces Italian painting from Giotto through the High Renaissance. The Vasari Corridor above once let the Medici walk unseen from the Palazzo Vecchio, through the Uffizi, across the Ponte Vecchio, to Palazzo Pitti.","ticket":"🎟️ Book 4-6 weeks ahead for June","warning":null,"gettingHere":null},{"time":"12:00pm","name":"Piazza della Signoria & Loggia dei Lanzi","coords":[43.7696,11.2558],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Signoria+Florence","desc":"Florence's outdoor sculpture gallery — Cellini's bronze Perseus holding Medusa's severed head, and the Rape of the Sabine Women, stand in the open loggia, free to see anytime.","ticket":null,"warning":null,"gettingHere":"Right outside the Uffizi"},{"time":"12:45pm","name":"Santa Croce","coords":[43.7686,11.2626],"cantMiss":true,"duration":"90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Santa+Croce+Florence","desc":"Franciscan basilica, and the 'Temple of the Italian Glories' — the tombs of Michelangelo, Galileo (whose remains weren't allowed a religious burial here until 1737, a century after his death, due to his heresy conviction), and Machiavelli, plus a monument to Dante, whose actual tomb is in Ravenna, where he died in exile. Brunelleschi's Pazzi Chapel in the cloister is considered a masterpiece of early Renaissance architecture.","ticket":"🎟️ ~€8","warning":null,"gettingHere":"~10 min walk east"},{"time":"2:15pm","name":"Lunch — Santa Croce/Sant'Ambrogio","type":"meal","desc":"TBD."},{"time":"3:30pm","name":"Palazzo Pitti — optional","coords":[43.7654,11.2493],"cantMiss":false,"duration":"60-90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Palazzo+Pitti+Florence","desc":"Optional, pick one or the other with Boboli if the day is running long — you'll have already done Uffizi and Santa Croce by this point. Built for a rival Florentine banking family in 1458, bought by the Medici in 1549 when they outgrew the Palazzo Vecchio. Now houses several museums including the Palatine Gallery's Raphaels and Titians.","ticket":"🎟️","warning":null,"gettingHere":"~8 min walk to Ponte Vecchio, cross into Oltrarno"},{"time":"5:00pm","name":"Boboli Gardens — optional","coords":[43.7629,11.2493],"cantMiss":true,"duration":"60 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Boboli+Gardens+Florence","desc":"Optional, pick one or the other with Pitti if the day is running long. The Medici's grand formal garden behind Palazzo Pitti, laid out from 1550 — one of the earliest and most influential examples of the Italian garden style, later copied across Europe including at Versailles. Room for the kids to run after two museum-heavy stops.","ticket":"🎟️","warning":null,"gettingHere":"Right behind Palazzo Pitti — the garden entrance is inside the palace courtyard"},{"time":"9:00pm","name":"Piazzale Michelangelo","coords":[43.7629,11.2653],"cantMiss":true,"duration":"60+ min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazzale+Michelangelo+Florence","desc":"Built in 1869, offering the classic panoramic view of Florence — domes, towers, and the Arno laid out below, with a bronze copy of David at its center. Timed for sunset, ~9:00-9:15pm in June.","ticket":null,"warning":null,"gettingHere":"Try walking via Costa San Giorgio and Via del Forte di San Giorgio, past Forte di Belvedere — shorter and more direct than going all the way around. If that route is closed, either walk the long way around (~30-40 min, steep) or take a taxi (~€10-15, ~10 min)."},{"time":"Dinner","name":"Dinner — near Piazzale Michelangelo","type":"meal","desc":"TBD."}]
+  },
+  { date: new Date(2027,5,9), block: "florence", title: "Bologna Day-Trip", sub: "Bologna Day-Trip",
+    cityPins: [{"lat":43.7696,"lng":11.2558,"name":"Florence"}],
+    context: "Bologna — nicknamed 'La Grassa' (the fat one) for its food, 'La Dotta' (the learned) for housing Europe's oldest university (founded 1088), and 'La Rossa' (the red) for its terracotta rooftops and left-wing politics. A 35-minute Frecciarossa ride from Florence, walked as one compact loop.",
+    routeUrl: "https://www.google.com/maps/dir/Firenze+Santa+Maria+Novella+Station/Via+Piella+Bologna/Piazza+Maggiore+Bologna/Archiginnasio+Bologna/Via+Pescherie+Vecchie+Bologna/Basilica+di+Santa+Maria+della+Vita+Bologna/Due+Torri+Bologna/",
+    townRoutes: [{"label":"Bologna only (walking)","url":"https://www.google.com/maps/dir/Via+Piella+Bologna/Piazza+Maggiore+Bologna/Archiginnasio+Bologna/Via+Pescherie+Vecchie+Bologna/Basilica+di+Santa+Maria+della+Vita+Bologna/Due+Torri+Bologna/"}],
+    driverToday: false,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:55am","name":"Via Piella — the secret window","coords":[44.499128,11.344842],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Piella+Bologna","desc":"A small window in an unmarked wall looking down onto one of Bologna's few remaining visible canals — the city once had over 60km of navigable waterways used to transport goods and power silk mills; most were covered over in the 20th century.","ticket":null,"warning":null,"gettingHere":null},{"time":"10:30am","name":"Piazza Maggiore & San Petronio","coords":[44.4938,11.3428],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Maggiore+Bologna","desc":"Bologna's grand main square, dominated by the Basilica of San Petronio — construction began in 1390 with plans to make it larger than St. Peter's in Rome. The Church intervened, funds were redirected to found the university instead, and the facade remains famously unfinished, half-clad in marble, half bare brick. It's free to enter one of the largest church interiors in the world.","ticket":null,"warning":null,"gettingHere":"~20 min walk down Via Indipendenza from the station"},{"time":"11:00am","name":"Archiginnasio","coords":[44.4926,11.3432],"cantMiss":false,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Archiginnasio+Bologna","desc":"The main building of Europe's oldest university, in use from 1563 until 1803. The walls and ceilings of its corridors are covered in thousands of painted coats of arms of past students and rectors. A small fee gets you into the 17th-century Anatomical Theatre, where public dissections once drew crowds.","ticket":"🎟️ small fee","warning":null,"gettingHere":"Right behind San Petronio"},{"time":"11:40am","name":"Via degli Orefici → Via Pescherie Vecchie","coords":[44.4939,11.3436],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Pescherie+Vecchie+Bologna","desc":"The entry streets of the Quadrilatero, Bologna's medieval market district — old fishmongers' stalls (pescherie) now sell fresh pasta, cheese, and cured meats spilling onto the cobblestones.","ticket":null,"warning":null,"gettingHere":"~5 min walk from Archiginnasio, back through Piazza Maggiore"},{"time":"12:00pm","name":"Santa Maria della Vita","coords":[44.493398,11.344617],"cantMiss":false,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Santa+Maria+della+Vita+Bologna","desc":"A small church holding one of Italy's most viscerally powerful Renaissance sculptures: Niccolò dell'Arca's life-sized terracotta Compianto sul Cristo morto (Lamentation over the Dead Christ), c. 1463 — figures frozen mid-scream and mid-grief around Christ's body.","ticket":null,"warning":null,"gettingHere":"A couple minutes further into the Quadrilatero"},{"time":"12:30pm","name":"Via Drapperie → Via Clavature → Via de' Ranocchi","coords":[44.4936,11.3444],"cantMiss":false,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+de%27+Ranocchi+Bologna","desc":"Continuing through the Quadrilatero. Via Ranocchi is home to L'Osteria del Sole, one of Bologna's oldest taverns, serving wine since 1465 (you bring your own food; they just pour).","ticket":null,"warning":null,"gettingHere":"Continuing directly on from Santa Maria della Vita"},{"time":"12:30pm","name":"Lunch — in the Quadrilatero","type":"meal","desc":"Along Via Drapperie / Clavature / Ranocchi."},{"time":"2:00pm","name":"Due Torri","coords":[44.494961,11.346232],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Due+Torri+Bologna","desc":"The Two Towers — Asinelli (97m, one of the tallest medieval towers in Italy) and the visibly leaning Garisenda, both built around 1109-1119 by rival noble families as status symbols, when Bologna once had well over 100 such towers. Viewing from the base only today.","ticket":null,"warning":null,"gettingHere":"~5 min walk from Via Ranocchi"}]
+  },
+  { date: new Date(2027,5,10), block: "florence", title: "Venice — Arrival Day", sub: "Venice — Arrival Day",
+    cityPins: [{"lat":45.4342,"lng":12.3388,"name":"Venice"}],
+    context: "Venice was founded by refugees fleeing barbarian invasions of the mainland in the 5th-6th centuries, who settled on a cluster of marshy lagoon islands precisely because they were nearly impossible to attack. What began as a refuge became, by the Middle Ages, the wealthiest maritime republic in the Mediterranean — the Most Serene Republic, ruled by an elected Doge, controlling trade routes from Europe to the Byzantine and Islamic worlds for over a thousand years. There are no cars anywhere in the historic center — everything moves by foot or by boat. Backpacks only today; your main luggage stays at Hotel Davanzati in Florence.",
+    routeUrl: "https://www.google.com/maps/dir/AC+Hotel+Venezia/Jewish+Ghetto+Venice/Fondamenta+della+Misericordia+Venice/Rialto+Bridge+Venice/Santa+Maria+dei+Miracoli+Venice/Piazza+San+Marco+Venice/",
+    townRoutes: null,
+    driverToday: false,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included, before the train to Venice."},{"time":"10:15am","name":"Jewish Ghetto","coords":[45.4446,12.3266],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Jewish+Ghetto+Venice","desc":"Established in 1516, the oldest Jewish ghetto in the world and the origin of the word itself (from the Venetian 'geto,' the foundry once located here). Home to five historic synagogues, some tucked invisibly into upper floors of ordinary-looking buildings.","ticket":null,"warning":null,"gettingHere":"A few minutes from the hotel"},{"time":"10:45am","name":"Fondamenta della Misericordia","coords":[45.4444,12.3298],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Fondamenta+della+Misericordia+Venice","desc":"The prettiest canal-side stretch in Cannaregio, lined with small bacari (wine bars) rather than the tourist crowds of the main routes.","ticket":null,"warning":null,"gettingHere":"A short walk from the Ghetto"},{"time":"11:05am","name":"Ponte Chiodo","coords":[45.442879,12.3346141],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/place/Ponte+Chiodo/@45.442879,12.3346141,21z","desc":"One of the last bridges left in Venice with no railings — a reminder of how all the city's bridges looked before 19th-century safety additions.","ticket":null,"warning":null,"gettingHere":"Just off the fondamenta"},{"time":"","name":"Walk past: Calle Varisco","coords":[45.4432,12.335],"cantMiss":false,"duration":"2 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Calle+Varisco+Venice","desc":"The narrowest street in Venice — just 53cm at its tightest point. A fun quick detour, not a formal stop.","ticket":null,"warning":null,"gettingHere":"A couple minutes toward Rialto"},{"time":"11:35am","name":"Rialto Bridge & Market","coords":[45.438,12.3358],"cantMiss":true,"duration":"40 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Rialto+Bridge+Venice","desc":"The oldest bridge across the Grand Canal, completed in 1591 — for centuries the only way to cross on foot. The market at its foot has traded produce and fish since the 11th century.","ticket":null,"warning":null,"gettingHere":"Continuing toward Rialto"},{"time":"12:15pm","name":"T Fondaco Rooftop Terrace","coords":[45.4382733,12.3365754],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/place/T+Fondaco+Rooftop+Terrace/@45.4382733,12.3359317,19z","desc":"A free viewing terrace over the Grand Canal, inside what was once the German merchants' trading house, later a post office, now a department store. Book the free time slot in advance.","ticket":null,"warning":"Free slots must be reserved ahead — first come, first served","gettingHere":"Right by Rialto"},{"time":"12:45pm","name":"Lunch — Venice","type":"meal","desc":"TBD."},{"time":"2:00pm","name":"Santa Maria dei Miracoli","coords":[45.4408,12.3376],"cantMiss":true,"duration":"20 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Santa+Maria+dei+Miracoli+Venice","desc":"Venice's 'marble jewel box' — a small Renaissance church clad entirely in polychrome marble, built 1481-1489 by Pietro Lombardo, one of the earliest and most refined examples of early Venetian Renaissance architecture.","ticket":"🎟️ ~€3/adult","warning":null,"gettingHere":"A walk from Rialto, past lunch"},{"time":"2:30pm","name":"Libreria Acqua Alta","coords":[45.4368,12.3402],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Libreria+Acqua+Alta+Venice","desc":"The famous bookshop that stores its stock in bathtubs, gondolas, and a full-size boat — a defense against Venice's periodic flooding. A staircase made entirely of old encyclopedias leads to a canal-view terrace out back.","ticket":null,"warning":null,"gettingHere":"Toward Santa Maria Formosa"},{"time":"3:15pm","name":"Scala Contarini del Bovolo","coords":[45.4372,12.3346],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Scala+Contarini+del+Bovolo+Venice","desc":"A 15th-century external spiral staircase, tucked down a hidden calle off Campo Manin — one of Venice's genuine hidden gems, rarely crowded. 'Bovolo' means snail in Venetian dialect.","ticket":null,"warning":null,"gettingHere":"Sits almost exactly between Rialto and San Marco"},{"time":"4:00pm","name":"Piazza San Marco","coords":[45.4342,12.3388],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Marco+Venice","desc":"The political and religious heart of Venice for over a thousand years, Napoleon reportedly called it 'the drawing room of Europe.'","ticket":null,"warning":null,"gettingHere":"Continuing toward the water"},{"time":"4:15pm","name":"St. Mark's Basilica — exterior","coords":[45.4345,12.3397],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=St+Mark%27s+Basilica+Venice","desc":"Byzantine domes and golden mosaics visible from outside; the loot of centuries of Venetian trade and conquest is built into its very walls, including the four bronze horses looted from Constantinople in 1204.","ticket":null,"warning":null,"gettingHere":"Right there on the piazza"},{"time":"4:45pm","name":"Doge's Palace + Bridge of Sighs — exterior","coords":[45.4337,12.3406],"cantMiss":false,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Doge%27s+Palace+Venice","desc":"The Gothic seat of Venetian government for centuries. The Bridge of Sighs, connecting the palace to the old prisons, is viewable from Ponte della Paglia — condemned prisoners supposedly sighed at their last glimpse of the city through its windows.","ticket":null,"warning":null,"gettingHere":"Right next to the Basilica"},{"time":"5:15pm","name":"Gondola ride","coords":[45.4338,12.3369],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Bacino+Orseolo+Venice","desc":"Venice's main gondola basin, tucked just behind Piazza San Marco. Fixed rate, one gondola fits all four of you.","ticket":"~€90 for 30 min","warning":null,"gettingHere":"A short walk to Bacino Orseolo"},{"time":"7:30pm","name":"Dinner — Da Mamo","type":"meal","desc":"Between San Marco and Rialto, ~10 min walk from the square."}]
+  },
+  { date: new Date(2027,5,11), block: "florence", title: "Murano & Return to Florence", sub: "Murano & Return to Florence",
+    cityPins: [{"lat":45.4595,"lng":12.3502,"name":"Murano"}],
+    context: "Murano has been the center of Venetian glassmaking since 1291, when the Republic ordered all glass furnaces moved there — officially to reduce fire risk in Venice's wooden city, though protecting the secrets of the trade was likely just as important. For centuries, Murano glassmakers were treated as minor nobility, forbidden from leaving the Republic on pain of death, so their techniques couldn't be sold abroad.",
+    routeUrl: "https://www.google.com/maps/dir/Ferrovia+Vaporetto+Venice/Wave+Murano+Glass/Basilica+dei+Santi+Maria+e+Donato+Murano/",
+    townRoutes: null,
+    driverToday: false,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"8:45am","name":"Ferrovia vaporetto stop","coords":[45.4413,12.321],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Ferrovia+Vaporetto+Venice","desc":"Multiple floating docks (A-E) serve different lines. Line 3 runs direct to Murano.","ticket":null,"warning":null,"gettingHere":"Right outside the station, near the hotel"},{"time":"10:00am","name":"Wave Murano Glass — guided tour","coords":[45.4595,12.3502],"cantMiss":true,"duration":"45-60 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Wave+Murano+Glass","desc":"Small-group tour (max 8), watching artisans shape molten glass in a furnace reaching 1400°C, with the history and technique explained by an English-speaking guide.","ticket":"🎟️ ~€29/pp — book ~1 month ahead","warning":"Genuine open-flame heat exposure — worth a quick check that the kids are comfortable near a working furnace","gettingHere":"A short walk from Murano Colonna, ~20-25 min boat ride from Ferrovia"},{"time":"","name":"Fondamenta dei Vetrai","coords":[45.4596,12.3495],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Fondamenta+dei+Vetrai+Murano","desc":"Murano's main canal-side street, lined with glass workshops and showrooms — look for the 'Vetro Artistico Murano' certification to spot authentic pieces.","ticket":null,"warning":null,"gettingHere":"Right from the Wave Glass studio"},{"time":"11:30am","name":"Basilica dei Santi Maria e Donato","coords":[45.4614,12.354],"cantMiss":true,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+dei+Santi+Maria+e+Donato+Murano","desc":"A 12th-century Byzantine mosaic floor, and behind the altar: four giant bones, over a meter long, said to belong to a dragon slain by Saint Donatus — almost certainly whale bones, but the legend is the point.","ticket":"🚪 Free","warning":null,"gettingHere":"Continuing along the canal, further into the island"},{"time":"1:15pm","name":"Lunch — along the Cannaregio walk back","type":"meal","desc":"TBD, after the Fondamente Nove crossing."}]
+  },
+  { date: new Date(2027,5,12), block: "florence", title: "Siena & San Gimignano — Private Driver", sub: "Siena & San Gimignano — Private Driver",
+    cityPins: [{"lat":43.3183,"lng":11.3311,"name":"Siena"},{"lat":43.4677,"lng":11.0431,"name":"San Gimignano"}],
+    context: "Siena was Florence's great medieval rival — a Gothic city-state that reached its peak in the 13th and 14th centuries, before the Black Death of 1348 killed an estimated two-thirds of its population and ended its golden age almost overnight, leaving the city frozen in its medieval form ever since. San Gimignano, an hour away, is nicknamed the 'Medieval Manhattan' for the 14 surviving tower-houses (of an original 72) that noble families built as both status symbols and defensive strongholds.",
+    routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Piazza+del+Campo+Siena/Siena+Cathedral+Duomo/Porta+San+Giovanni+San+Gimignano/Piazza+della+Cisterna+San+Gimignano/Porta+San+Matteo+San+Gimignano/",
+    townRoutes: [{"label":"Siena only (walking)","url":"https://www.google.com/maps/dir/Piazza+del+Campo+Siena/Palazzo+Pubblico+Siena/Torre+del+Mangia+Siena/Via+di+Citta+Siena/Siena+Cathedral+Duomo/Piazza+San+Giovanni+Siena/Facciatone+Siena/"},{"label":"San Gimignano only (walking)","url":"https://www.google.com/maps/dir/Porta+San+Giovanni+San+Gimignano/Via+San+Giovanni+San+Gimignano/Piazza+della+Cisterna+San+Gimignano/Piazza+del+Duomo+San+Gimignano/Duomo+di+San+Gimignano/Torre+Grossa+San+Gimignano/Via+San+Matteo+San+Gimignano/Church+of+Sant%27Agostino+San+Gimignano/Porta+San+Matteo+San+Gimignano/"}],
+    driverToday: true,
+    stops: [{"section":"SIENA"},{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"~10:15am","name":"Piazza del Campo","coords":[43.318333,11.331389],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Campo+Siena","desc":"The shell-shaped main square, one of the great medieval piazzas in Europe, sloping down toward the Palazzo Pubblico like an amphitheater. Twice a year (July 2 and August 16) it becomes the track for the Palio, a bareback horse race between Siena's 17 historic contrade (districts) that dates to the Middle Ages.","ticket":null,"warning":null,"gettingHere":"Driver drops you directly here, ~1h15 from Florence"},{"time":"10:35am","name":"Palazzo Pubblico","coords":[43.31833,11.33139],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Palazzo+Pubblico+Siena","desc":"Siena's Gothic town hall, completed in 1310 — courtyard only today, not visiting the Museo Civico interior, which holds Lorenzetti's famous 'Allegory of Good and Bad Government' frescoes.","ticket":null,"warning":null,"gettingHere":"Right on the Campo"},{"time":"10:45am","name":"Torre del Mangia","coords":[43.3182111,11.3322528],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Torre+del+Mangia+Siena","desc":"Siena's 88-meter bell tower, viewing from the base only — not climbing today.","ticket":null,"warning":null,"gettingHere":"Rises directly from Palazzo Pubblico"},{"time":"10:50am","name":"Via di Città → Via del Capitano","coords":[43.2975,11.33],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+di+Citta+Siena","desc":"Lined with medieval palazzi — the connecting walk between the Campo and the Duomo.","ticket":null,"warning":null,"gettingHere":"The direct route from the Campo up to the Duomo"},{"time":"11:00am","name":"Siena Cathedral (Duomo)","coords":[43.317185,11.328823],"cantMiss":true,"duration":"45 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Siena+Cathedral+Duomo","desc":"Consecrated in 1215, one of the great Gothic cathedrals of Italy — striped black-and-white marble inside and out (the colors of Siena's mythical founders' horse), an extraordinary inlaid marble floor with 56 panels made over two centuries, and the vividly frescoed Piccolomini Library. A planned 14th-century expansion to make it the largest church in the world was abandoned after the Black Death — you can still see the unfinished nave walls today.","ticket":"🎟️ OPA SI Pass","warning":null,"gettingHere":"At the top of Via del Capitano"},{"time":"11:45am","name":"Battistero di San Giovanni","coords":[43.3028,11.3297],"cantMiss":false,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Giovanni+Siena","desc":"Tucked beneath the Duomo's apse — because Siena's cathedral sits on a slope, the Baptistery was built as a supporting structure one level down, reached by its own staircase into a small piazza. Jacopo della Quercia's bronze baptismal font inside has panels by Donatello and Ghiberti.","ticket":"🎟️ Same pass","warning":null,"gettingHere":"Down the staircase from the Duomo's apse, into Piazza San Giovanni"},{"time":"12:00pm","name":"Facciatone climb","coords":[43.3033,11.3291],"cantMiss":true,"duration":"20 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Facciatone+Siena","desc":"The unfinished wall of that abandoned 'New Cathedral' expansion, now a viewing platform. A gentler climb than Torre del Mangia — two levels, the lower looking over the rooftops toward the Campo, the upper opening to a full panorama of the walled city and countryside.","ticket":"🎟️ Same pass","warning":null,"gettingHere":"Back up from the Baptistery, at the Duomo level"},{"section":"SAN GIMIGNANO"},{"time":"~1:30pm","name":"Porta San Giovanni","coords":[43.4672,11.0431],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+San+Giovanni+San+Gimignano","desc":"The medieval south gate — main entry point into the walled town.","ticket":null,"warning":null,"gettingHere":"Driver drop-off here, ~40 min from Siena"},{"time":"1:35pm","name":"Via San Giovanni","coords":[43.4678,11.0432],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+San+Giovanni+San+Gimignano","desc":"The main street climbing from the gate toward the town center.","ticket":null,"warning":null,"gettingHere":"Begins right at Porta San Giovanni"},{"time":"1:45pm","name":"Lunch — San Gimignano","coords":[43.468,11.0433],"cantMiss":false,"duration":"45 min","access":"outside","mapLink":null,"desc":"TBD — plenty of options along Via San Giovanni and around Piazza della Cisterna.","ticket":"TBD","warning":null,"gettingHere":"A couple minutes further up Via San Giovanni"},{"time":"2:30pm","name":"Piazza della Cisterna","coords":[43.4674,11.0428],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Cisterna+San+Gimignano","desc":"The triangular heart of town, named for its 13th-century well, ringed by medieval tower-houses. Home to Gelateria Dondoli, twice crowned world gelato champion — officially recognized as among the best in Italy.","ticket":null,"warning":null,"gettingHere":"A couple minutes further up Via San Giovanni"},{"time":"2:50pm","name":"Piazza del Duomo","coords":[43.4677861,11.0431444],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Duomo+San+Gimignano","desc":"The civic and religious center of town — Duomo, Palazzo Comunale, and the twin Salvucci towers all face this square.","ticket":null,"warning":null,"gettingHere":"A few steps north"},{"time":"2:55pm","name":"Duomo di San Gimignano (Collegiata)","coords":[43.4677861,11.0431444],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Duomo+di+San+Gimignano","desc":"Formally a collegiate church, not a true cathedral, since San Gimignano never had its own bishop — but colloquially always called 'the Duomo.' The walls are entirely covered in fresco cycles, including a dramatic Last Judgment. Modest dress required.","ticket":"🎟️ ~€5","warning":null,"gettingHere":"Right on Piazza del Duomo"},{"time":"3:25pm","name":"Torre Grossa","coords":[43.4676278,11.0429028],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Torre+Grossa+San+Gimignano","desc":"The tallest tower in town at 54m, 218 steps — viewing from the base only, not climbing today.","ticket":null,"warning":null,"gettingHere":"Same piazza, part of the Palazzo Comunale"},{"time":"3:30pm","name":"Via San Matteo","coords":[43.4691,11.0428],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+San+Matteo+San+Gimignano","desc":"Continuing north — quieter than Via San Giovanni, lined with old workshops and tower bases.","ticket":null,"warning":null,"gettingHere":"A couple minutes from Torre Grossa"},{"time":"3:45pm","name":"Church of Sant'Agostino","coords":[43.4699,11.0429],"cantMiss":false,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Church+of+Sant%27Agostino+San+Gimignano","desc":"Optional, only if energy allows — a Benozzo Gozzoli fresco cycle telling the life of St. Augustine.","ticket":"🚪 Free","warning":null,"gettingHere":"~15 min walk up Via San Matteo"},{"time":"4:15pm","name":"Porta San Matteo","coords":[43.4703,11.0426],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+San+Matteo+San+Gimignano","desc":"The north gate — end of the walk through town.","ticket":null,"warning":null,"gettingHere":"Driver pickup here"}]
+  },
+  { date: new Date(2027,5,13), block: "florence", title: "Val d'Orcia: Pienza & Montepulciano — Private Driver", sub: "Val d'Orcia: Pienza & Montepulciano — Private Driver",
+    cityPins: [{"lat":43.0778,"lng":11.6786,"name":"Pienza"},{"lat":43.0967,"lng":11.7876,"name":"Montepulciano"}],
+    context: "The Val d'Orcia is a UNESCO World Heritage cultural landscape — rolling golden hills, cypress-lined roads, and hilltop towns that came to embody the Renaissance ideal of a harmonious, humanized countryside. Pienza was rebuilt almost overnight in the 1450s as Pope Pius II's 'ideal city,' the first planned Renaissance town in Italy. Montepulciano, perched on a limestone ridge, is the source of Vino Nobile, one of Italy's oldest and most prestigious wines.",
+    routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/43.06557558660052,11.612752302009957/43.07260187939838,11.64725710627834/Piazza+Pio+II+Pienza/Porta+al+Prato+Montepulciano/Piazza+Grande+Montepulciano/",
+    townRoutes: [{"label":"Pienza only (walking)","url":"https://www.google.com/maps/dir/Piazza+Pio+II+Pienza/Corso+Il+Rossellino+Pienza/Via+del+Casello+Pienza/"},{"label":"Montepulciano only (walking)","url":"https://www.google.com/maps/dir/Porta+al+Prato+Montepulciano/Via+di+Gracciano+nel+Corso+Montepulciano/Chiesa+di+Sant%27Agostino+Montepulciano/Piazza+San+Francesco+Montepulciano/Piazza+Grande+Montepulciano/Duomo+di+Montepulciano/Porta+al+Prato+Montepulciano/"}],
+    driverToday: true,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"~9:20am","name":"Gladiator viewpoint","coords":[43.06557558660052,11.612752302009957],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.06557558660052,11.612752302009957","desc":"The countryside road made famous in Ridley Scott's 'Gladiator' (2000) — golden fields and a single cypress-lined dirt track, the classic Val d'Orcia postcard view.","ticket":null,"warning":null,"gettingHere":"~1h20 drive from Florence"},{"time":"9:35am","name":"End of the Strada dei Gladiatori","coords":[43.06971878414619,11.614509085639733],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.06971878414619,11.614509085639733","desc":"The far end of the same dirt road.","ticket":null,"warning":null,"gettingHere":"A short walk further down the same dirt road"},{"time":"9:50am","name":"Cappella della Madonna di Vitaleta","coords":[43.07260187939838,11.64725710627834],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=43.07260187939838,11.64725710627834","desc":"A tiny chapel framed by four cypress trees, one of the most photographed spots in all of Tuscany — the image that appears on countless Val d'Orcia postcards and calendars.","ticket":null,"warning":"Open only during the hours of the adjoining Ristoro Vitaleta — confirm on the day","gettingHere":"A few minutes' drive to the chapel"},{"time":"10:15am","name":"Gladiator Homecoming Scene","coords":[43.0751152388538,11.668135811784811],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.0751152388538,11.668135811784811","desc":"A second filming location a short drive away, used for the film's homecoming sequence.","ticket":null,"warning":null,"gettingHere":"A short drive away"},{"time":"~12:30pm","name":"Lunch — Agriturismo","coords":[43.075,11.64],"cantMiss":true,"duration":"90 min","access":"outside","mapLink":null,"desc":"A relaxed Tuscan meal at a family-run farm, with Pecorino di Pienza tasting straight from the source and views over the valley, wine included for the adults.","ticket":"Included in the €1,260 Sunday driver package","warning":"Exact location pending confirmation from Truescany","gettingHere":"A short drive to the farm"},{"section":"PIENZA"},{"time":"~2:15pm","name":"Piazza Pio II & Duomo","coords":[43.07639,11.67861],"cantMiss":true,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Pio+II+Pienza","desc":"The centerpiece of Pope Pius II's 1459 'ideal city' — he tore down his family's medieval houses and had architect Bernardo Rossellino rebuild the town center in just three years, creating the first fully planned Renaissance urban space in Italy. The Cathedral of Santa Maria Assunta is free to enter.","ticket":"🚪 Free","warning":null,"gettingHere":"~15 min drive from the agriturismo"},{"time":"2:35pm","name":"Corso Il Rossellino","coords":[43.0779,11.6785],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Corso+Il+Rossellino+Pienza","desc":"Pienza's main street, named for its architect, lined with pecorino cheese shops — the town is the acknowledged origin of Pecorino di Pienza.","ticket":null,"warning":null,"gettingHere":"Right off Piazza Pio II"},{"time":"2:45pm","name":"Via del Casello (the Belvedere)","coords":[43.0774,11.6781],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+del+Casello+Pienza","desc":"Pienza's real panoramic viewpoint, a walkway along the old walls looking south over the Val d'Orcia toward Monte Amiata. Walk back through Via dell'Amore, a short connecting alley, not a destination in itself.","ticket":null,"warning":null,"gettingHere":"A few minutes down Corso Il Rossellino, near Porta al Ciglio"},{"section":"MONTEPULCIANO"},{"time":"~3:30pm","name":"Porta al Prato","coords":[43.0925,11.7844],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+al+Prato+Montepulciano","desc":"The town's main gate, at the base of a roughly 1km climb to the top.","ticket":null,"warning":null,"gettingHere":"Driver drop-off and pickup, same gate, ~30 min from Pienza"},{"time":"3:35pm","name":"Via di Gracciano nel Corso","coords":[43.094,11.7855],"cantMiss":false,"duration":"20 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+di+Gracciano+nel+Corso+Montepulciano","desc":"The main corso climbing uphill, changing names several times along the way. Look for the Marzocco Column (Florence's heraldic lion, marking 16th-century Medici rule over the town), Palazzo Bucelli with ancient Etruscan and Roman inscriptions embedded in its base, and the Torre di Pulcinella, a clock tower with a jester figure that strikes the hours.","ticket":null,"warning":null,"gettingHere":"Begins right at Porta al Prato"},{"time":"3:55pm","name":"Chiesa di Sant'Agostino","coords":[43.095,11.7867],"cantMiss":false,"duration":"10 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Chiesa+di+Sant%27Agostino+Montepulciano","desc":"A small church along the climb, facade attributed to Michelozzo.","ticket":null,"warning":null,"gettingHere":"A few minutes up the corso"},{"time":"4:10pm","name":"Piazza San Francesco","coords":[43.0958,11.787],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Francesco+Montepulciano","desc":"A rest stop partway up the climb — genuinely panoramic views over the countryside.","ticket":null,"warning":null,"gettingHere":"A few minutes further up the climb"},{"time":"4:25pm","name":"Piazza Grande","coords":[43.0967,11.7876],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Grande+Montepulciano","desc":"The top of the town, 605m above sea level — the Duomo and the crenellated Palazzo Comunale, deliberately modeled on Florence's Palazzo Vecchio to assert Florentine-aligned civic identity after Montepulciano's long struggle between Florence and Siena for control of the town.","ticket":null,"warning":null,"gettingHere":"A few minutes further up, at the top of the town"},{"time":"4:40pm","name":"Duomo di Montepulciano & Pozzo dei Grifi e dei Leoni","coords":[43.0966,11.7877],"cantMiss":false,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Duomo+di+Montepulciano","desc":"An intentionally unfinished, raw stone facade conceals a polished Renaissance interior with Taddeo di Bartolo's altarpiece. The old wishing well opposite, topped with griffins and lions, gives the piazza its full name.","ticket":null,"warning":null,"gettingHere":"Right on Piazza Grande"},{"time":"5:00pm","name":"Return directly to Porta al Prato","coords":[43.0925,11.7844],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":null,"desc":"No further stops on the way down — straight back to the gate.","ticket":null,"warning":null,"gettingHere":"From Piazza Grande, straight back down — no further stops"}]
+  },
+  { date: new Date(2027,5,14), block: "florence", title: "Ravenna & Porto Corsini — Embarkation Day", sub: "Ravenna & Porto Corsini — Embarkation Day",
+    cityPins: [{"lat":44.4177,"lng":12.1997,"name":"Ravenna"}],
+    context: "Ravenna was, remarkably, the capital of the Western Roman Empire (from 402 AD), then of the Ostrogothic Kingdom, then a Byzantine outpost — and each regime left behind mosaics of extraordinary quality, preserved because the city fell into economic obscurity for over a thousand years after, freezing its treasures in place. UNESCO lists eight of its monuments together as a single World Heritage Site, calling them 'a supreme artistic expression' bridging the Roman, Christian, and Byzantine worlds.",
+    routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Basilica+di+San+Vitale+Ravenna/Dante%27s+Tomb+Ravenna/Basilica+di+Sant%27Apollinare+Nuovo+Ravenna/Porto+Corsini+Cruise+Terminal/",
+    townRoutes: [{"label":"Ravenna only (walking)","url":"https://www.google.com/maps/dir/Basilica+di+San+Vitale+Ravenna/Mausoleum+of+Galla+Placidia+Ravenna/Via+Cavour+Ravenna/Piazza+del+Popolo+Ravenna/Dante%27s+Tomb+Ravenna/Basilica+di+Sant%27Apollinare+Nuovo+Ravenna/"}],
+    driverToday: true,
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"9:15am","name":"Basilica di San Vitale","coords":[44.4177,12.1997],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+San+Vitale+Ravenna","desc":"Consecrated in 547 AD under Byzantine emperor Justinian I, an octagonal church whose apse holds the most celebrated Byzantine mosaics outside Istanbul — golden panels of Justinian and Empress Theodora, each with their full court, facing each other across the altar. Dante is thought to have seen these mosaics himself while living in Ravenna, and some scholars believe they influenced his descriptions of paradise in the Divine Comedy.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver drop-off, ~2h drive from Florence"},{"time":"9:45am","name":"Mausoleum of Galla Placidia","coords":[44.4176,12.1998],"cantMiss":true,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Mausoleum+of+Galla+Placidia+Ravenna","desc":"A small, unassuming brick exterior hides one of the most atmospheric interiors in Italy — a dark chamber under a deep blue ceiling scattered with gold stars, built around 430 AD as a chapel, though Galla Placidia (daughter, sister, wife, and mother of four different Roman emperors) is not actually buried here.","ticket":"🎟️ Timed-entry — mandatory, sells out weeks ahead in peak season","warning":null,"gettingHere":"Right next to San Vitale"},{"time":"10:00am","name":"Via Cavour","coords":[44.4172,12.2013],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Cavour+Ravenna","desc":"An elegant central street leading toward Piazza del Popolo.","ticket":null,"warning":null,"gettingHere":"The main route out of the San Vitale complex"},{"time":"10:15am","name":"Piazza del Popolo","coords":[44.4161,12.2025],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Popolo+Ravenna","desc":"Ravenna's main square, roughly midway on the walk to Sant'Apollinare Nuovo.","ticket":null,"warning":null,"gettingHere":"A few minutes further along Via Cavour"},{"time":"10:30am","name":"Dante's Tomb","coords":[44.4156,12.2013],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Dante%27s+Tomb+Ravenna","desc":"Dante Alighieri, exiled from his native Florence for political reasons, died in Ravenna in 1321 and is buried here. Florence has spent centuries trying to get his remains back — a neoclassical tomb was even built for him in Santa Croce in 1829, and it remains empty to this day. Ravenna has consistently refused to return him.","ticket":"🚪 Free","warning":null,"gettingHere":"A couple minutes from Piazza del Popolo"},{"time":"10:55am","name":"Basilica di Sant'Apollinare Nuovo","coords":[44.4133,12.2036],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Sant%27Apollinare+Nuovo+Ravenna","desc":"Built by the Ostrogothic King Theodoric around 500 AD, originally for Arian Christian worship before being reconsecrated to Catholic use. Two long mosaic processions line the nave — 22 female saints and 26 male saints and martyrs — marching from the old port city of Classe and from Theodoric's palace toward Christ and the Madonna.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver meets you here after the walk"},{"time":"1:30pm","name":"Porto Corsini Cruise Terminal","coords":[44.4914,12.2789],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porto+Corsini+Cruise+Terminal","desc":"","ticket":null,"warning":"Must be on board by 2:00pm — ship departs 5:00pm","gettingHere":"Driver picks you up here for the transfer to the port"}]
+  },
+  { date: new Date(2027,5,15), block: "cruise", title: "Split, Croatia", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":43.5081,"lng":16.4402,"name":"Split"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,16), block: "cruise", title: "Dubrovnik, Croatia", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":42.6407,"lng":18.1077,"name":"Dubrovnik"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,17), block: "cruise", title: "Kotor, Montenegro", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":42.4247,"lng":18.7712,"name":"Kotor"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,18), block: "cruise", title: "At sea", sub: "Planning not started for this day yet.",
+    cityPins: [],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,19), block: "cruise", title: "Messina → Taormina, Sicily", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":37.8516,"lng":15.2853,"name":"Taormina"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,20), block: "cruise", title: "Amalfi Coast — Salerno", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":40.634,"lng":14.6027,"name":"Amalfi"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,21), block: "cruise", title: "At sea — Luis Jr.'s birthday! 🎂", sub: "Planning not started for this day yet.",
+    cityPins: [],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,22), block: "cruise", title: "Portofino", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":44.3028,"lng":9.2097,"name":"Portofino"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,23), block: "cruise", title: "Livorno — Cinque Terre", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":44.0997,"lng":9.7367,"name":"Cinque Terre"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,24), block: "cruise", title: "Livorno — Pisa & Lucca", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":43.7228,"lng":10.3966,"name":"Pisa"},{"lat":43.843,"lng":10.5027,"name":"Lucca"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,25), block: "rome", title: "Disembark Civitavecchia → Rome", sub: "Transfer ~70-90 min, check in Domus 21 Luxury Suites (confirmed, res. 741/2026).",
+    cityPins: [{"lat":42.0942,"lng":11.7981,"name":"Civitavecchia"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,26), block: "rome", title: "Rome: Colosseum, Forum, Palatine", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,27), block: "rome", title: "Rome: Vatican", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,28), block: "rome", title: "Rome: Trevi, Pantheon, Spanish Steps", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,29), block: "rome", title: "Rome: free day", sub: "Planning not started for this day yet.",
+    cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+  { date: new Date(2027,5,30), block: "rome", title: "Fly home — Rome → Miami", sub: "Return flight not yet booked (est. ~$3,200 cash).",
+    cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
+    context: null,
+    routeUrl: null,
+    townRoutes: null,
+    driverToday: false,
+    stops: []
+  },
+];
+
+const bookings = {
+  "attractions": [
+    {
+      "what": "Accademia Gallery (David)",
+      "status": "tobook",
+      "meta": "HIGHEST PRIORITY — 6-8 wks ahead · Jun 7"
+    },
+    {
+      "what": "Santa Maria Novella interior",
+      "status": "tobook",
+      "meta": "Low urgency · Jun 7"
+    },
+    {
+      "what": "Brunelleschi Pass (Dome + Baptistery)",
+      "status": "tobook",
+      "meta": "HIGH — sells out 2-4 wks ahead · Jun 7"
+    },
+    {
+      "what": "Uffizi Gallery",
+      "status": "tobook",
+      "meta": "HIGH — 4-6 wks ahead · Jun 8"
+    },
+    {
+      "what": "Santa Croce",
+      "status": "tobook",
+      "meta": "Low urgency, ~€8 · Jun 8"
+    },
+    {
+      "what": "Palazzo Pitti + Boboli combo",
+      "status": "tobook",
+      "meta": "A couple weeks ahead · Jun 8"
+    },
+    {
+      "what": "Siena OPA SI Pass (Duomo, Battistero, Facciatone)",
+      "status": "tobook",
+      "meta": "Days ahead, skip queues · Jun 12"
+    },
+    {
+      "what": "San Gimignano Duomo (Collegiata)",
+      "status": "tobook",
+      "meta": "Low urgency, ~€5 · Jun 12"
+    },
+    {
+      "what": "Ravenna 5-monument pass",
+      "status": "tobook",
+      "meta": "HIGH — Galla Placidia timed-entry, sells out weeks ahead · Jun 14"
+    },
+    {
+      "what": "T Fondaco Rooftop Terrace",
+      "status": "tobook",
+      "meta": "Free, but slots go — book ahead · Jun 10"
+    },
+    {
+      "what": "Santa Maria dei Miracoli",
+      "status": "tobook",
+      "meta": "~€3/adult, small church · Jun 10"
+    },
+    {
+      "what": "Scala Contarini del Bovolo",
+      "status": "tobook",
+      "meta": "Small fee, confirm on-site · Jun 10"
+    },
+    {
+      "what": "Gondola, Bacino Orseolo",
+      "status": "tobook",
+      "meta": "~€90/30 min, fixed rate · Jun 10"
+    },
+    {
+      "what": "Wave Murano Glass — guided tour",
+      "status": "tobook",
+      "meta": "~€29/pp, books out ~1 month ahead · Jun 11"
+    }
+  ],
+  "transport": [
+    {
+      "what": "AA38 Miami → Rome (overnight)",
+      "status": "booked",
+      "meta": "Conf: OYEQDQ · Miles+$22.40 · Jun 5"
+    },
+    {
+      "what": "Leonardo Express + Frecciarossa to Florence",
+      "status": "tobook",
+      "meta": "Once schedule releases · Jun 6"
+    },
+    {
+      "what": "Frecciarossa Firenze ↔ Bologna",
+      "status": "tobook",
+      "meta": "~35 min each way · Jun 9"
+    },
+    {
+      "what": "Frecciarossa Firenze ↔ Venezia S. Lucia",
+      "status": "tobook",
+      "meta": "~2 hr each way · Jun 10-11"
+    },
+    {
+      "what": "Truescany private driver",
+      "status": "booked",
+      "meta": "€3,078 by card, charged ~11 days before · Jun 12-14"
+    },
+    {
+      "what": "Return flight FCO → MIA",
+      "status": "tobook",
+      "meta": "Est. ~$3,200 cash · Jun 30"
+    }
+  ],
+  "hotels": [
+    {
+      "what": "Hotel Davanzati — Junior Suite, Florence",
+      "status": "booked",
+      "meta": "€3,668 · free cancel to May 29 · Jun 6-14"
+    },
+    {
+      "what": "AC Hotel Venezia — 2 rooms, 2 Twin",
+      "status": "booked",
+      "meta": "144,000 pts + €7 · Jun 10-11"
+    },
+    {
+      "what": "Domus 21 — Junior Suite, Rome",
+      "status": "booked",
+      "meta": "€2,220 · free cancel to Jun 22 · Jun 25-30"
+    }
+  ],
+  "meals": [
+  {
+    "date": "Jun 5",
+    "b": "TBD (home)",
+    "l": "TBD (home)",
+    "d": "On flight"
+  },
+  {
+    "date": "Jun 6",
+    "b": "On flight",
+    "l": "TBD",
+    "d": "TBD, near hotel"
+  },
+  {
+    "date": "Jun 7",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, near Duomo",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 8",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, Sant'Ambrogio",
+    "d": "TBD, near Piazzale"
+  },
+  {
+    "date": "Jun 9",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, Quadrilatero",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 10",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, Venice",
+    "d": "\u2705 Da Mamo, near San Marco"
+  },
+  {
+    "date": "Jun 11",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, Cannaregio walk back",
+    "d": "TBD, back in Florence"
+  },
+  {
+    "date": "Jun 12",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, San Gimignano",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 13",
+    "b": "\u2705 Included, Davanzati",
+    "l": "\u2705 Agriturismo (driver pkg)",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 14",
+    "b": "\u2705 Included, Davanzati",
+    "l": "TBD, on board",
+    "d": "\u2705 Cruise dining"
+  },
+  {
+    "date": "Jun 15",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Split",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 16",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Dubrovnik",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 17",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Kotor",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 18",
+    "b": "\u2705 Cruise",
+    "l": "\u2705 Cruise",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 19",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Taormina",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 20",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Amalfi Coast",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 21",
+    "b": "\u2705 Cruise \u2014 birthday! \ud83c\udf82",
+    "l": "\u2705 Cruise",
+    "d": "\u2705 Cruise, birthday dinner?"
+  },
+  {
+    "date": "Jun 22",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Portofino",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 23",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Cinque Terre",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 24",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Pisa/Lucca",
+    "d": "\u2705 Cruise"
+  },
+  {
+    "date": "Jun 25",
+    "b": "\u2705 Cruise",
+    "l": "TBD, Rome",
+    "d": "TBD, Rome"
+  },
+  {
+    "date": "Jun 26",
+    "b": "TBD (Domus 21 \u2014 room only)",
+    "l": "TBD",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 27",
+    "b": "TBD (Domus 21 \u2014 room only)",
+    "l": "TBD",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 28",
+    "b": "TBD (Domus 21 \u2014 room only)",
+    "l": "TBD",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 29",
+    "b": "TBD (Domus 21 \u2014 room only)",
+    "l": "TBD",
+    "d": "TBD"
+  },
+  {
+    "date": "Jun 30",
+    "b": "TBD (Domus 21 \u2014 room only)",
+    "l": "On flight",
+    "d": "Home!"
+  }
+]
+};
+
+const contactsData = {
+  "driver": {
+    "company": "TRUESCANY by I Just Drive Srl",
+    "contact": "Frankie — Operations",
+    "phone": "+39 055 0935928",
+    "whatsapp": "+39 055 0935928 (WhatsApp)",
+    "email": "operations@truescany.com",
+    "address": "Via Mannelli 107, 50136, Florence, Italy"
+  },
+  "hotelsList": [
+    {
+      "name": "Hotel Davanzati (Florence)",
+      "phone": "+39 055 286666",
+      "email": "info@hoteldavanzati.it",
+      "dates": "Jun 6–14"
+    },
+    {
+      "name": "AC Hotel Venezia",
+      "phone": "+39 041 8520321",
+      "email": "—",
+      "dates": "Jun 10–11"
+    },
+    {
+      "name": "Domus 21 Luxury Suites (Rome)",
+      "phone": "+39 347 8219075",
+      "email": "info@domus21suites.com",
+      "dates": "Jun 25–30"
+    }
+  ]
+};
+
+const infoData = {
+  "currency": [
+    {
+      "c": "🇮🇹 Italy (Florence, Venice, Bologna, Siena, San Gimignano, Val d'Orcia, Ravenna, cruise ports, Rome)",
+      "note": "Euro (€). Cards widely accepted everywhere."
+    },
+    {
+      "c": "🇭🇷 Croatia (Split, Dubrovnik)",
+      "note": "Euro (€) — Croatia adopted the euro Jan 1, 2023. Cards widely accepted."
+    },
+    {
+      "c": "🇲🇪 Montenegro (Kotor)",
+      "note": "Euro (€) — used as the country's currency though Montenegro is not an EU member. Cards accepted in most tourist areas; carry some cash for small vendors."
+    }
+  ],
+  "emergency": [
+    {
+      "c": "🇮🇹 Italy",
+      "emergency": "112",
+      "police": "112",
+      "ambulance": "112"
+    },
+    {
+      "c": "🇭🇷 Croatia",
+      "emergency": "112",
+      "police": "112",
+      "ambulance": "112"
+    },
+    {
+      "c": "🇲🇪 Montenegro",
+      "emergency": "112",
+      "police": "122",
+      "ambulance": "124"
+    },
+    {
+      "c": "🌍 EU Universal",
+      "emergency": "112",
+      "police": "112",
+      "ambulance": "112"
+    }
+  ]
+};
+
+
+// ======================= RENDER =======================
+const blockLabel = { florence: "Florence Base", cruise: "Cruise", rome: "Rome" };
+const dow = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+
+function fmtLong(d){
+  return d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+function sameDay(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+const strip = document.getElementById('dateStrip');
+const container = document.getElementById('dayContainer');
+const today = new Date();
+const blockAbbrev = { florence: "FLR", cruise: "SEA", rome: "ROM" };
+
+let prevBlock = null;
+days.forEach((day, i) => {
+  // block separator label, inserted whenever the block changes
+  if (day.block !== prevBlock){
+    const sep = document.createElement('div');
+    sep.className = `block-sep block-${day.block}`;
+    sep.innerHTML = `<div class="sep-label">${blockAbbrev[day.block]}</div>`;
+    strip.appendChild(sep);
+    prevBlock = day.block;
+  }
+  // chip
+  const chip = document.createElement('div');
+  chip.className = `chip block-${day.block}`;
+  chip.dataset.idx = i;
+  chip.innerHTML = `<div class="dow">${dow[day.date.getDay()]}</div><div class="dom">${day.date.getDate()}</div>`;
+  chip.addEventListener('click', () => showDay(i));
+  strip.appendChild(chip);
+
+  // day section
+  const sec = document.createElement('section');
+  sec.className = 'day-section';
+  sec.id = `day-${i}`;
+  sec.style.display = 'none';
+
+  let stopsHtml = '';
+  day.stops.forEach((s, si) => {
+    if (s.section){
+      stopsHtml += `<div class="section-divider">${s.section}</div>`;
+      return;
+    }
+    const gettingHtml = s.gettingHere ? `<div class="getting-here"><span class="gh-icon">↳</span>${s.gettingHere}</div>` : '';
+    if (s.type === 'meal'){
+      stopsHtml += `
+        ${gettingHtml}
+        <div class="timeline-item meal">
+          <div class="rail"><div class="rail-dot"></div><div class="rail-line"></div></div>
+          <div class="stop meal" id="stop-${i}-${si}">
+            <div class="stop-head" onclick="toggleStop(${i},${si})">
+              <div class="stop-time">${s.time || ''}</div>
+              <div class="stop-main">
+                <div class="stop-name"><span class="meal-icon">${s.icon || '🍴'}</span>${s.name}</div>
+              </div>
+              <div class="chevron">▾</div>
+            </div>
+            <div class="stop-body">
+              <div class="stop-body-inner">
+                <div class="stop-desc">${s.desc || ''}</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      return;
+    }
+    const badges = [];
+    if (s.access === 'ticketed') badges.push(`<span class="badge ticketed">🎟️ Ticketed</span>`);
+    if (s.access === 'free') badges.push(`<span class="badge free">🚪 Free entry</span>`);
+    if (s.access === 'outside') badges.push(`<span class="badge outside">🚶 Outside</span>`);
+    if (s.duration) badges.push(`<span class="badge duration">⏱️ ${s.duration}</span>`);
+    stopsHtml += `
+      ${gettingHtml}
+      <div class="timeline-item ${s.cantMiss ? 'cantmiss' : ''}">
+        <div class="rail"><div class="rail-dot"></div><div class="rail-line"></div></div>
+        <div class="stop" id="stop-${i}-${si}">
+          <div class="stop-head" onclick="toggleStop(${i},${si})">
+            <div class="stop-time">${s.time || ''}</div>
+            <div class="stop-main">
+              <div class="stop-name">${s.cantMiss ? '⭐ ' : ''}${s.name}</div>
+              <div class="stop-meta">
+                ${badges.join('')}
+                ${s.mapLink ? `<a class="maps-chip" href="${s.mapLink}" onclick="event.stopPropagation()">📍 Maps</a>` : ''}
+              </div>
+            </div>
+            <div class="chevron">▾</div>
+          </div>
+          <div class="stop-body">
+            <div class="stop-body-inner">
+              <div class="stop-photo">photo loads here on expand</div>
+              <div class="stop-desc">${s.desc || ''}</div>
+              ${s.warning ? `<div class="stop-warning">⚠️ ${s.warning}</div>` : ''}
+              ${s.ticket ? `<div class="stop-ticket">🎟️ ${s.ticket}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  if (day.stops.length === 0){
+    stopsHtml = `<div style="padding:34px 0;text-align:center;color:var(--ink-faint);font-size:13.5px;font-weight:500;">Planning not started for this day yet.</div>`;
+  }
+
+  const introHtml = day.context ? `
+    <div class="intro-card" id="intro-${i}">
+      <div class="intro-head" onclick="toggleIntro(${i})">
+        <span class="intro-icon">🌍</span>
+        <span class="intro-title">Intro — about today</span>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="intro-body">
+        <div class="intro-body-inner">
+          <div class="intro-photo">${day.contextImg || 'photo loads here on expand'}</div>
+          <div class="intro-text">${day.context}</div>
+        </div>
+      </div>
+    </div>` : '';
+
+  const townsInDay = day.stops.filter(s => s.section).map(s => s.section);
+  const hasMapPoints = day.stops.some(s => s.coords);
+  let mapHtml = '';
+  if (hasMapPoints) {
+    const toggles = ['Full day', ...townsInDay];
+    mapHtml = `
+      <div class="day-map-wrap">
+        <div class="map-toggle-row">
+          ${toggles.map((t, ti) => `<button class="map-toggle-btn ${ti===0?'active':''}" onclick="setDayMapFilter(${i},'${t}',this)">${t}</button>`).join('')}
+        </div>
+        <div class="day-map" id="dayMap-${i}"></div>
+      </div>`;
+  }
+
+  const driverHtml = day.driverToday ? `
+    <div class="driver-box">
+      <div class="driver-title">🚗 Today's driver — Truescany</div>
+      <div class="driver-line">📞 +39 055 0935928 · 💬 WhatsApp same number</div>
+    </div>` : '';
+
+  const townRoutesHtml = (day.townRoutes || []).map(tr =>
+    `<a class="route-link secondary" href="${tr.url}">🗺️ ${tr.label}</a>`
+  ).join('');
+
+  sec.innerHTML = `
+    <div class="day-header">
+      <h2 class="block-${day.block}">${fmtLong(day.date)}</h2>
+      ${day.title || day.sub ? `<div class="day-sub block-${day.block}"><span class="accent-bar"></span><span>${day.title}${day.sub ? ' — ' + day.sub : ''}</span></div>` : ''}
+    </div>
+    ${introHtml}
+    ${mapHtml}
+    ${driverHtml}
+    ${day.routeUrl ? `<a class="route-link" href="${day.routeUrl}">🗺️ Open full day route in Google Maps</a>` : ''}
+    ${townRoutesHtml}
+    ${day.stops.length ? `
+    <div class="day-toolbar">
+      <button class="expand-toggle" onclick="toggleAll(${i}, this)">Expand all</button>
+    </div>` : ''}
+    ${stopsHtml}
+  `;
+  container.appendChild(sec);
+});
+
+function toggleIntro(i){
+  document.getElementById(`intro-${i}`).classList.toggle('open');
+}
+
+// ======================= DAY MAP =======================
+const dayMapInstances = {};
+const dayMapMarkers = {};
+
+function collectStopsWithCoords(day){
+  const out = [];
+  let currentSection = null;
+  day.stops.forEach(s => {
+    if (s.section){ currentSection = s.section; return; }
+    if (s.coords) out.push({ ...s, section: currentSection });
+  });
+  return out;
+}
+
+function initDayMap(i){
+  if (dayMapInstances[i]) return;
+  if (typeof L === 'undefined'){ setTimeout(() => initDayMap(i), 150); return; }
+  const day = days[i];
+  const pts = collectStopsWithCoords(day);
+  if (!pts.length) return;
+  const el = document.getElementById(`dayMap-${i}`);
+  if (!el) return;
+  const map = L.map(el, { scrollWheelZoom: false }).setView(pts[0].coords, 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+  }).addTo(map);
+  const markers = pts.map((s, idx) => {
+    const color = s.cantMiss ? '#E5484D' : '#2F6FED';
+    const icon = L.divIcon({
+      className: '', html: `<div style="background:${color};width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:#fff;font-size:10px;font-weight:800;">${idx+1}</span></div>`,
+      iconSize: [22,22], iconAnchor: [11,22],
+    });
+    const m = L.marker(s.coords, { icon }).addTo(map);
+    m.bindPopup(`<b>${idx+1}. ${s.name}</b>${s.time ? '<br>' + s.time : ''}`);
+    m.__section = s.section;
+    return m;
+  });
+  const group = L.featureGroup(markers);
+  map.fitBounds(group.getBounds().pad(0.2));
+  dayMapInstances[i] = map;
+  dayMapMarkers[i] = markers;
+}
+
+function setDayMapFilter(i, filter, btn){
+  document.querySelectorAll(`#day-${i} .map-toggle-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const map = dayMapInstances[i];
+  const markers = dayMapMarkers[i];
+  if (!map || !markers) return;
+  const visible = markers.filter(m => filter === 'Full day' || m.__section === filter);
+  markers.forEach(m => map.removeLayer(m));
+  visible.forEach(m => m.addTo(map));
+  if (visible.length){
+    const group = L.featureGroup(visible);
+    map.fitBounds(group.getBounds().pad(0.3));
+  }
+}
+
+function showDay(i){
+  document.querySelectorAll('.day-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.chip').forEach(s => s.classList.remove('active'));
+  const daySection = document.getElementById(`day-${i}`);
+  if (daySection) daySection.style.display = 'block';
+  const chip = document.querySelector(`.chip[data-idx="${i}"]`);
+  if (chip){
+    chip.classList.add('active');
+    if (typeof chip.scrollIntoView === 'function'){
+      try { chip.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'}); } catch(e) {}
+    }
+  }
+  if (document.getElementById(`dayMap-${i}`)){
+    setTimeout(() => {
+      initDayMap(i);
+      if (dayMapInstances[i]) dayMapInstances[i].invalidateSize();
+    }, 50);
+  }
+}
+
+function toggleStop(dayIdx, stopIdx){
+  document.getElementById(`stop-${dayIdx}-${stopIdx}`).classList.toggle('open');
+}
+
+function toggleAll(dayIdx, btn){
+  const sec = document.getElementById(`day-${dayIdx}`);
+  const stops = sec.querySelectorAll('.stop');
+  const anyClosed = [...stops].some(s => !s.classList.contains('open'));
+  stops.forEach(s => s.classList.toggle('open', anyClosed));
+  btn.textContent = anyClosed ? 'Collapse all' : 'Expand all';
+}
+
+// ======================= MENU =======================
+const fmtShort = d => d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+
+function openMenu(){
+  document.getElementById('menuOverlay').classList.add('open');
+  renderMenuTab('itinerary');
+}
+function closeMenu(){
+  document.getElementById('menuOverlay').classList.remove('open');
+}
+function switchMenuTab(tab){
+  document.querySelectorAll('.menu-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  renderMenuTab(tab);
+}
+function jumpFromMenu(i){
+  closeMenu();
+  showDay(i);
+}
+
+function renderMenuTab(tab){
+  const c = document.getElementById('menuContent');
+  if (tab === 'itinerary') c.innerHTML = renderItinTab('list');
+  if (tab === 'bookings') c.innerHTML = renderBookingsTab('attractions');
+  if (tab === 'contacts') c.innerHTML = renderContactsTab();
+  if (tab === 'info') c.innerHTML = renderInfoOnlyTab();
+}
+
+function renderItinTab(mode){
+  const toggle = `
+    <div class="itin-subtoggle">
+      <button class="subtab ${mode==='list'?'active':''}" onclick="switchItinMode('list')">List</button>
+      <button class="subtab ${mode==='map'?'active':''}" onclick="switchItinMode('map')">Map</button>
+    </div>`;
+  if (mode === 'map'){
+    return toggle + `
+      <div class="trip-map" id="tripMap"></div>
+      <div class="trip-map-legend">
+        <span><span class="leg-dot" style="background:#A8A8AF"></span>Past</span>
+        <span><span class="leg-dot" style="background:#E5484D"></span>Today</span>
+        <span><span class="leg-dot" style="background:#2F6FED"></span>Upcoming</span>
+      </div>`;
+  }
+  return toggle + renderItineraryList();
+}
+
+function switchItinMode(mode){
+  document.getElementById('menuContent').innerHTML = renderItinTab(mode);
+  if (mode === 'map') setTimeout(initTripMap, 50);
+}
+
+let tripMapInstance = null;
+function initTripMap(){
+  const el = document.getElementById('tripMap');
+  if (!el) return;
+  if (typeof L === 'undefined'){ setTimeout(initTripMap, 150); return; }
+  if (tripMapInstance) { tripMapInstance.remove(); tripMapInstance = null; }
+  const map = L.map(el, { scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+  }).addTo(map);
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  const allMarkers = [];
+  days.forEach(day => {
+    const day0 = new Date(day.date); day0.setHours(0,0,0,0);
+    const color = day0.getTime() === today0.getTime() ? '#E5484D' : (day0 < today0 ? '#A8A8AF' : '#2F6FED');
+    (day.cityPins || []).forEach(p => {
+      const m = L.circleMarker([p.lat, p.lng], { radius: 6, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.95 }).addTo(map);
+      m.bindPopup(`<b>${p.name}</b><br>${fmtShort(day.date)}`);
+      allMarkers.push(m);
+    });
+  });
+  if (allMarkers.length){
+    const group = L.featureGroup(allMarkers);
+    map.fitBounds(group.getBounds().pad(0.1));
+  } else {
+    map.setView([43.7, 11.3], 6);
+  }
+  tripMapInstance = map;
+}
+
+function renderItineraryList(){
+  let html = '';
+  let prev = null;
+  days.forEach((day, i) => {
+    if (day.block !== prev){
+      html += `<div class="glance-block-header block-${day.block}"><span class="lbl-dot"></span>${blockLabel[day.block]}</div>`;
+      prev = day.block;
+    }
+    html += `<div class="glance-row" onclick="jumpFromMenu(${i})">
+      <div class="glance-date">${fmtShort(day.date)}</div>
+      <div class="glance-desc">${day.title}</div>
+      <div class="glance-chevron">›</div>
+    </div>`;
+  });
+  return html;
+}
+
+function renderBookingsTab(activeSub){
+  const subs = ['attractions','transport','hotels','meals'];
+  const subLabels = { attractions:'Attractions', transport:'Transport', hotels:'Hotels', meals:'Meals' };
+  let tabsHtml = `<div class="subtabs">` + subs.map(s =>
+    `<button class="subtab ${s===activeSub?'active':''}" onclick="renderSub('${s}')">${subLabels[s]}</button>`
+  ).join('') + `</div>`;
+  let rowsHtml = `<div id="bookingRows">` + bookingRowsHtml(activeSub) + `</div>`;
+  return tabsHtml + rowsHtml;
+}
+function bookingRowsHtml(sub){
+  if (sub === 'meals') return mealsTableHtml();
+  return bookings[sub].map(b => `
+    <div class="book-row">
+      <span class="status-pill ${b.status}">${b.status==='booked' ? '✓ Booked' : 'To book'}</span>
+      <div class="b-what">${b.what}</div>
+      <div class="b-meta">${b.meta}</div>
+    </div>`).join('');
+}
+function mealsTableHtml(){
+  const rows = bookings.meals.map(m => `
+    <tr>
+      <td class="meal-date">${m.date}</td>
+      <td>${m.b}</td>
+      <td>${m.l}</td>
+      <td>${m.d}</td>
+    </tr>`).join('');
+  return `
+    <table class="meals-table">
+      <thead><tr><th></th><th>🍳 B</th><th>🥗 L</th><th>🍽️ D</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+function renderSub(sub){
+  document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === sub));
+  document.getElementById('bookingRows').innerHTML = bookingRowsHtml(sub);
+}
+
+function renderContactsTab(){
+  const d = contactsData.driver;
+  const driverHtml = `
+    <div class="info-block"><h4>Driver</h4>
+      <div class="contact-card">
+        <div class="c-name">${d.company}</div>
+        Contact: ${d.contact}<br>
+        📞 ${d.phone}<br>
+        💬 WhatsApp: ${d.whatsapp}<br>
+        ✉️ ${d.email}<br>
+        📍 ${d.address}
+      </div>
+    </div>`;
+  const hotelsHtml = `
+    <div class="info-block"><h4>Hotels</h4>
+      ${contactsData.hotelsList.map(h => `
+        <div class="contact-card" style="margin-bottom:8px;">
+          <div class="c-name">${h.name}</div>
+          ${h.dates}<br>
+          📞 ${h.phone}<br>
+          ✉️ ${h.email}
+        </div>`).join('')}
+    </div>`;
+  return driverHtml + hotelsHtml;
+}
+
+function renderInfoOnlyTab(){
+  const cur = infoData.currency.map(x => `<div class="info-line"><b>${x.c}</b> — ${x.note}</div>`).join('');
+  const em = infoData.emergency.map(x => `<div class="info-line"><b>${x.c}</b> — Emergency ${x.emergency} · Police ${x.police} · Ambulance ${x.ambulance}</div>`).join('');
+  return `
+    <div class="info-block"><h4>Currency</h4>${cur}</div>
+    <div class="info-block"><h4>Emergency Numbers</h4>${em}</div>`;
+}
+
+// ======================= AUTO-JUMP TO TODAY =======================
+const banner = document.getElementById('todayBanner');
+let matchIdx = days.findIndex(d => sameDay(d.date, today));
+
+if (matchIdx === -1){
+  if (today < TRIP_START){
+    const msDay = 1000*60*60*24;
+    const daysUntil = Math.ceil((TRIP_START - today)/msDay);
+    banner.innerHTML = `🧳 <strong>${daysUntil} days</strong> until departure — showing Day 1. Tap any date above to jump around.`;
+  } else if (today > TRIP_END){
+    banner.innerHTML = `✈️ Trip complete — showing Day 1 as a placeholder.`;
+  }
+  matchIdx = 0;
+} else {
+  banner.innerHTML = `📍 You're on the trip today — jumped straight here.`;
+}
+showDay(matchIdx);
+</script>
+</body>
+</html>
