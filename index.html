@@ -69,7 +69,7 @@
     cursor:pointer; padding:0;
   }
   .hbar{
-    display:block; width:24px; height:3.5px; border-radius:2px;
+    display:block; width:24px; height:2px; border-radius:1px;
     background:var(--ink);
   }
   .trip-title-compact{ flex:1; min-width:0; }
@@ -179,8 +179,9 @@
   }
   .route-link:last-of-type{ margin-bottom:4px; }
   .route-link.secondary{
-    background:var(--surface-2); color:var(--ink); font-size:11.5px; padding:7px 13px;
+    background:var(--accent-soft); color:var(--accent); font-size:11.5px; padding:6.5px 13px;
     margin-top:0; margin-right:6px;
+    border:1.5px solid var(--accent);
   }
 
   .driver-box{
@@ -480,9 +481,10 @@
   .city-links-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
   .city-map-link{
     display:inline-flex; align-items:center; gap:5px;
-    background:var(--surface-2); color:var(--accent);
-    border-radius:16px; padding:7px 13px;
+    background:var(--accent-soft); color:var(--accent);
+    border-radius:16px; padding:6.5px 13px;
     text-decoration:none; font-size:12px; font-weight:700;
+    border:1.5px solid var(--accent);
   }
 
   footer{
@@ -616,7 +618,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Basilica+di+San+Vitale+Ravenna/Dante%27s+Tomb+Ravenna/Basilica+di+Sant%27Apollinare+Nuovo+Ravenna/Porto+Corsini+Cruise+Terminal/",
     townRoutes: [{"label":"Ravenna only (walking)","url":"https://www.google.com/maps/dir/Basilica+di+San+Vitale+Ravenna/Mausoleum+of+Galla+Placidia+Ravenna/Via+Cavour+Ravenna/Piazza+del+Popolo+Ravenna/Dante%27s+Tomb+Ravenna/Basilica+di+Sant%27Apollinare+Nuovo+Ravenna/"}],
     driverToday: true,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"7:00am","name":"Pickup at Hotel Davanzati, with luggage","type":"transport","desc":"Truescany driver."},{"time":"9:15am","name":"Basilica di San Vitale","coords":[44.4177,12.1997],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+San+Vitale+Ravenna","desc":"Consecrated in 547 AD under Byzantine emperor Justinian I, an octagonal church whose apse holds the most celebrated Byzantine mosaics outside Istanbul — golden panels of Justinian and Empress Theodora, each with their full court, facing each other across the altar. Dante is thought to have seen these mosaics himself while living in Ravenna, and some scholars believe they influenced his descriptions of paradise in the Divine Comedy.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver drop-off, ~2h drive from Florence"},{"time":"9:45am","name":"Mausoleum of Galla Placidia","timeSensitive":true,"coords":[44.4176,12.1998],"cantMiss":true,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Mausoleum+of+Galla+Placidia+Ravenna","desc":"A small, unassuming brick exterior hides one of the most atmospheric interiors in Italy — a dark chamber under a deep blue ceiling scattered with gold stars, built around 430 AD as a chapel, though Galla Placidia (daughter, sister, wife, and mother of four different Roman emperors) is not actually buried here.","ticket":"🎟️ Timed-entry — mandatory, sells out weeks ahead in peak season","warning":null,"gettingHere":"Right next to San Vitale"},{"time":"10:00am","name":"Via Cavour","coords":[44.4172,12.2013],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Cavour+Ravenna","desc":"An elegant central street leading toward Piazza del Popolo.","ticket":null,"warning":null,"gettingHere":"The main route out of the San Vitale complex"},{"time":"10:15am","name":"Piazza del Popolo","coords":[44.4161,12.2025],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Popolo+Ravenna","desc":"Ravenna's main square, roughly midway on the walk to Sant'Apollinare Nuovo.","ticket":null,"warning":null,"gettingHere":"A few minutes further along Via Cavour"},{"time":"10:30am","name":"Dante's Tomb","coords":[44.4156,12.2013],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Dante%27s+Tomb+Ravenna","desc":"Dante Alighieri, exiled from his native Florence for political reasons, died in Ravenna in 1321 and is buried here. Florence has spent centuries trying to get his remains back — a neoclassical tomb was even built for him in Santa Croce in 1829, and it remains empty to this day. Ravenna has consistently refused to return him.","ticket":"🚪 Free","warning":null,"gettingHere":"A couple minutes from Piazza del Popolo"},{"time":"10:55am","name":"Basilica di Sant'Apollinare Nuovo","coords":[44.4133,12.2036],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Sant%27Apollinare+Nuovo+Ravenna","desc":"Built by the Ostrogothic King Theodoric around 500 AD, originally for Arian Christian worship before being reconsecrated to Catholic use. Two long mosaic processions line the nave — 22 female saints and 26 male saints and martyrs — marching from the old port city of Classe and from Theodoric's palace toward Christ and the Madonna.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver meets you here after the walk"},{"time":"1:30pm","name":"Porto Corsini Cruise Terminal","timeSensitive":true,"type":"transport","coords":[44.4914,12.2789],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porto+Corsini+Cruise+Terminal","desc":"","ticket":null,"warning":"Must be on board by 2:00pm — ship departs 5:00pm","gettingHere":"Driver picks you up here for the transfer to the port"}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"7:00am","name":"Pickup at Hotel Davanzati, with luggage","type":"transport","desc":"Truescany driver."},{"section":"RAVENNA"},{"time":"9:15am","name":"Basilica di San Vitale","coords":[44.4177,12.1997],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+San+Vitale+Ravenna","desc":"Consecrated in 547 AD under Byzantine emperor Justinian I, an octagonal church whose apse holds the most celebrated Byzantine mosaics outside Istanbul — golden panels of Justinian and Empress Theodora, each with their full court, facing each other across the altar. Dante is thought to have seen these mosaics himself while living in Ravenna, and some scholars believe they influenced his descriptions of paradise in the Divine Comedy.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver drop-off, ~2h drive from Florence"},{"time":"9:45am","name":"Mausoleum of Galla Placidia","timeSensitive":true,"coords":[44.4176,12.1998],"cantMiss":true,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Mausoleum+of+Galla+Placidia+Ravenna","desc":"A small, unassuming brick exterior hides one of the most atmospheric interiors in Italy — a dark chamber under a deep blue ceiling scattered with gold stars, built around 430 AD as a chapel, though Galla Placidia (daughter, sister, wife, and mother of four different Roman emperors) is not actually buried here.","ticket":"🎟️ Timed-entry — mandatory, sells out weeks ahead in peak season","warning":null,"gettingHere":"Right next to San Vitale"},{"time":"10:00am","name":"Via Cavour","coords":[44.4172,12.2013],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Cavour+Ravenna","desc":"An elegant central street leading toward Piazza del Popolo.","ticket":null,"warning":null,"gettingHere":"The main route out of the San Vitale complex"},{"time":"10:15am","name":"Piazza del Popolo","coords":[44.4161,12.2025],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Popolo+Ravenna","desc":"Ravenna's main square, roughly midway on the walk to Sant'Apollinare Nuovo.","ticket":null,"warning":null,"gettingHere":"A few minutes further along Via Cavour"},{"time":"10:30am","name":"Dante's Tomb","coords":[44.4156,12.2013],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Dante%27s+Tomb+Ravenna","desc":"Dante Alighieri, exiled from his native Florence for political reasons, died in Ravenna in 1321 and is buried here. Florence has spent centuries trying to get his remains back — a neoclassical tomb was even built for him in Santa Croce in 1829, and it remains empty to this day. Ravenna has consistently refused to return him.","ticket":"🚪 Free","warning":null,"gettingHere":"A couple minutes from Piazza del Popolo"},{"time":"10:55am","name":"Basilica di Sant'Apollinare Nuovo","coords":[44.4133,12.2036],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Sant%27Apollinare+Nuovo+Ravenna","desc":"Built by the Ostrogothic King Theodoric around 500 AD, originally for Arian Christian worship before being reconsecrated to Catholic use. Two long mosaic processions line the nave — 22 female saints and 26 male saints and martyrs — marching from the old port city of Classe and from Theodoric's palace toward Christ and the Madonna.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver meets you here after the walk"},{"time":"1:30pm","name":"Porto Corsini Cruise Terminal","timeSensitive":true,"type":"transport","coords":[44.4914,12.2789],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porto+Corsini+Cruise+Terminal","desc":"","ticket":null,"warning":"Must be on board by 2:00pm — ship departs 5:00pm","gettingHere":"Driver picks you up here for the transfer to the port"}]
   },
   { date: new Date(2027,5,15), block: "cruise", title: "Split, Croatia", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":43.5081,"lng":16.4402,"name":"Split"}],
@@ -1442,7 +1444,7 @@ function setDayMapFilter(i, filter, btn){
   const map = dayMapInstances[i];
   const markers = dayMapMarkers[i];
   if (!map || !markers) return;
-  const visible = markers.filter(m => filter === 'Full day' || m.__isHotel || m.__section === filter);
+  const visible = markers.filter(m => filter === 'Full day' || m.__section === filter);
   markers.forEach(m => map.removeLayer(m));
   visible.forEach(m => m.addTo(map));
   if (visible.length){
@@ -1459,7 +1461,10 @@ function showDay(i){
   const chip = document.querySelector(`.chip[data-idx="${i}"]`);
   if (chip){
     chip.classList.add('active');
-    if (typeof chip.scrollIntoView === 'function'){
+    if (i === 0){
+      const strip = document.getElementById('dateStrip');
+      if (strip) strip.scrollLeft = 0;
+    } else if (typeof chip.scrollIntoView === 'function'){
       try { chip.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'}); } catch(e) {}
     }
   }
