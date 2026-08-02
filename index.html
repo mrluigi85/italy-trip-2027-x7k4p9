@@ -30,8 +30,8 @@
     --gold-soft:#FBF1DF;
     --meal-bg:#FDEEE6;
     --meal-accent:#D97757;
-    --transport-bg:#EAEFF5;
-    --transport-accent:#5B7A9D;
+    --transport-bg:#E0F2FE;
+    --transport-accent:#0EA5E9;
     --radius:12px;
   }
   *{box-sizing:border-box;}
@@ -82,7 +82,7 @@
     display:flex; align-items:flex-end; gap:5px;
     overflow-x:auto;
     padding:2px 14px 3px;
-    scroll-padding-left:14px;
+    scroll-padding-left:7px;
     scroll-snap-type:x proximity;
     -webkit-overflow-scrolling:touch;
   }
@@ -354,13 +354,7 @@
   .glance-chevron{ font-size:16px; color:var(--ink-faint); flex:0 0 auto; }
 
   /* Sub-tabs (bookings) */
-  .subtabs{ display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
-  .subtab{
-    font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:700;
-    background:var(--surface); border:none; border-radius:16px;
-    padding:6px 11px; color:var(--ink-soft); cursor:pointer;
-  }
-  .subtab.active{ background:var(--accent-soft); color:var(--accent); }
+  /* Sub-tabs (bookings, itinerary) now use the shared .seg-toggle style */
 
   .book-row{
     padding:11px 12px; background:var(--surface); border-radius:10px; margin-bottom:8px;
@@ -385,15 +379,20 @@
   .meals-table td.meal-date{ font-weight:800; white-space:nowrap; color:var(--ink); }
   .meals-table tr:nth-child(even) td{ background:var(--surface); }
 
+  /* ---------- Shared segmented toggle control ---------- */
+  .seg-toggle{
+    display:inline-flex; background:var(--surface); border-radius:20px;
+    padding:3px; gap:2px; margin-bottom:10px; flex-wrap:wrap;
+  }
+  .seg-toggle button{
+    font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:700;
+    background:none; border:none; border-radius:16px;
+    padding:6px 13px; color:var(--ink-soft); cursor:pointer;
+  }
+  .seg-toggle button.active{ background:var(--ink); color:#fff; }
+
   /* ---------- Day map ---------- */
   .day-map-wrap{ margin-bottom:16px; }
-  .map-toggle-row{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
-  .map-toggle-btn{
-    font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:700;
-    background:var(--surface); border:none; border-radius:16px;
-    padding:6px 12px; color:var(--ink-soft); cursor:pointer;
-  }
-  .map-toggle-btn.active{ background:var(--ink); color:#fff; }
   .day-map{
     width:100%; height:220px; border-radius:12px; overflow:hidden;
     background:var(--surface);
@@ -403,7 +402,7 @@
   .leaflet-popup-content b{ font-weight:800; }
   .map-legend{
     display:flex; flex-wrap:wrap; gap:10px 14px;
-    margin-top:10px; padding:0 2px;
+    margin-top:10px; margin-bottom:16px; padding:0 2px;
   }
   .legend-item{
     display:inline-flex; align-items:center; gap:5px;
@@ -412,7 +411,7 @@
   .legend-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
 
   /* ---------- Trip-wide map (Itinerary tab) ---------- */
-  .itin-subtoggle{ display:flex; gap:6px; margin-bottom:14px; }
+  /* .itin-subtoggle now uses the shared .seg-toggle style */
   .trip-map{
     width:100%; height:340px; border-radius:12px; overflow:hidden;
     background:var(--surface); margin-bottom:10px;
@@ -451,6 +450,13 @@
     background:var(--transport-accent);
   }
   .transport-icon{ font-size:14px; margin-right:2px; }
+  .stop.transport.critical{
+    background:var(--cantmiss-soft);
+    border:1.5px solid var(--cantmiss);
+  }
+  .timeline-item.transport.critical .rail-dot{
+    background:var(--cantmiss);
+  }
 
   .pin-num{
     display:inline-flex; align-items:center; justify-content:center;
@@ -461,7 +467,8 @@
 
   /* ---------- Intro / city context section ---------- */
   .intro-card{
-    background:var(--accent-soft);
+    background:#F4F8FE;
+    border:1px solid #D9E6FA;
     border-radius:var(--radius);
     margin-bottom:16px;
     overflow:hidden;
@@ -532,13 +539,17 @@ const TRIP_START = new Date(2027, 5, 5);
 const TRIP_END   = new Date(2027, 5, 30);
 
 const days = [
-  { date: new Date(2027,5,5), block: "prelude", title: "Depart Miami", sub: "AA38 overnight flight to Rome.",
+  { date: new Date(2027,5,5), block: "prelude", title: "Depart Miami", sub: "AA52 departs 8:00pm — plan the Uber XXL for ~4:00-4:15pm.",
     cityPins: [],
     context: null,
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "~4:00-4:15pm", name: "Uber XXL — home to MIA", type: "transport", desc: "Book in advance through the Uber app rather than requesting on the spot — Uber XXL (6-seat) isn't always available immediately on demand, and with four passengers plus check-in luggage, a regular UberX won't fit everyone. Targets arrival at MIA ~3 hours before the 8:00pm departure; adjust for your actual drive time.", ticket: "Book ahead in the Uber app" },
+      { time: "8:00pm", name: "AA52 — Miami to Rome", type: "transport", icon: "✈️", desc: "Overnight flight, Miami (MIA) to Rome Fiumicino (FCO).", ticket: "<a href=\"https://www.aa.com\" target=\"_blank\">Open American Airlines app</a>" , "gettingHere": "Dropped at MIA departures by the Uber"},
+      { time: "In-flight", name: "Dinner — on the flight", type: "meal", desc: "Dinner served on board." , "gettingHere": "Served on board"},
+    ]
   },
   { date: new Date(2027,5,6), block: "florence", title: "Arrive Florence", sub: "Arrive Florence",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -547,7 +558,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Cattedrale+di+Santa+Maria+del+Fiore+Florence/Ponte+Vecchio+Florence/Piazza+della+Signoria+Florence/",
     townRoutes: null,
     driverToday: false,
-    stops: [{"time":"Breakfast","name":"Breakfast — on the overnight flight","type":"meal","desc":"Served before landing."},{"time":"12:05pm","name":"Leonardo Express + Frecciarossa","type":"transport","cantMiss":false,"duration":"~2 hrs total transit","access":"outside","mapLink":null,"desc":"FCO airport to Roma Termini (~32 min), then Rome to Florence (~1h30) — the fastest, most comfortable route after an overnight flight.","ticket":"Ticket info","warning":null,"gettingHere":null},{"time":"~4:15pm","name":"Taxi to Hotel Davanzati","type":"transport","desc":"Ring the bell for help with the 26 steps up to reception."},{"time":"6:00pm","name":"Sunday Mass — Duomo","timeSensitive":true,"coords":[43.773251,11.255474],"cantMiss":false,"duration":"~45 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Cattedrale+di+Santa+Maria+del+Fiore","desc":"The cathedral interior is reserved for prayer on Sundays — attending Mass is the only way to see inside the cathedral on this day.","ticket":null,"warning":null,"gettingHere":"5 min walk from the hotel"},{"time":"7:00pm","name":"Ponte Vecchio","coords":[43.76799,11.25316],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Ponte+Vecchio+Florence","desc":"Florence's oldest bridge, first built in Roman times and rebuilt after a 1345 flood. It's the only Florentine bridge to survive World War II — legend holds Hitler ordered it spared. Lined with jewelers' shops since 1593, when the Medici evicted the butchers whose refuse was fouling the river.","ticket":null,"warning":null,"gettingHere":"5 min walk from the Duomo"},{"time":"7:20pm","name":"Piazza della Signoria","coords":[43.76972,11.25556],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Signoria+Florence","desc":"The political heart of Florence since the 14th century, dominated by the fortress-like Palazzo Vecchio. This is where Savonarola's 'Bonfire of the Vanities' burned art and books in 1497, and where he himself was executed the following year.","ticket":null,"warning":null,"gettingHere":"3 min walk from Ponte Vecchio"},{"time":"Dinner","name":"Dinner — near the hotel","type":"meal","desc":"TBD, first night, keep it easy."}]
+    stops: [{"time":"Breakfast","name":"Breakfast — on the overnight flight","type":"meal","desc":"Served before landing."},{"time":"12:05pm","name":"Leonardo Express + Frecciarossa","type":"transport","coords":[41.8003,12.2389],"cantMiss":false,"duration":"~2 hrs total transit","access":"outside","mapLink":null,"desc":"FCO airport to Roma Termini (~32 min), then Rome to Florence (~1h30) — the fastest, most comfortable route after an overnight flight.","ticket":"Ticket info","warning":null,"gettingHere":"After breakfast on the plane, deplane and follow signs to the Leonardo Express platform"},{"time":"~1:00pm","name":"Lunch — near the station","type":"meal","gettingHere":"Arriving by train at Firenze SMN","desc":"TBD, grabbed near Firenze SMN station or once at the hotel."},{"time":"6:00pm","name":"Sunday Mass — Duomo","timeSensitive":true,"coords":[43.773251,11.255474],"cantMiss":false,"duration":"~45 min","access":"free","gettingHere":"After lunch, taxi to Hotel Davanzati (~10 min, ring the bell for help with the 26 steps up to reception), drop bags, then a ~5 min walk to the Duomo","mapLink":"https://www.google.com/maps/search/?api=1&query=Cattedrale+di+Santa+Maria+del+Fiore","desc":"The cathedral interior is reserved for prayer on Sundays — attending Mass is the only way to see inside the cathedral on this day.","ticket":null,"warning":null},{"time":"7:00pm","name":"Ponte Vecchio","coords":[43.76799,11.25316],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Ponte+Vecchio+Florence","desc":"Florence's oldest bridge, first built in Roman times and rebuilt after a 1345 flood. It's the only Florentine bridge to survive World War II — legend holds Hitler ordered it spared. Lined with jewelers' shops since 1593, when the Medici evicted the butchers whose refuse was fouling the river.","ticket":null,"warning":null,"gettingHere":"5 min walk from the Duomo"},{"time":"7:20pm","name":"Piazza della Signoria","coords":[43.76972,11.25556],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Signoria+Florence","desc":"The political heart of Florence since the 14th century, dominated by the fortress-like Palazzo Vecchio. This is where Savonarola's 'Bonfire of the Vanities' burned art and books in 1497, and where he himself was executed the following year.","ticket":null,"warning":null,"gettingHere":"3 min walk from Ponte Vecchio"},{"time":"Dinner","name":"Dinner — near the hotel","type":"meal","desc":"TBD, first night, keep it easy.","gettingHere":"Right at the hotel or a short walk out"}]
   },
   { date: new Date(2027,5,7), block: "florence", title: "Florence: Accademia, Santa Maria Novella, Duomo Complex", sub: "Florence: Accademia, Santa Maria Novella, Duomo Complex",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -556,7 +567,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Galleria+dell%27Accademia+Florence/Santa+Maria+Novella+Florence/Cattedrale+di+Santa+Maria+del+Fiore+Florence/",
     townRoutes: null,
     driverToday: false,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:00am","name":"Accademia Gallery — David","timeSensitive":true,"coords":[43.7769,11.2589],"cantMiss":true,"duration":"60-90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Galleria+dell%27Accademia+Florence","desc":"Michelangelo carved David from a single 17-foot block of Carrara marble that two earlier sculptors had already given up on as flawed. He was 26. Finished in 1504, the statue originally stood outside Palazzo Vecchio as a civic symbol — Florence, like David, defiant against more powerful enemies (Rome, Milan). The gallery also holds his four unfinished 'Prisoners,' figures seemingly still trapped inside the stone, and a long corridor of Florentine Gothic and early Renaissance paintings.","ticket":"🎟️ Book 6-8 weeks ahead for June","warning":"Same-day walk-up queues run 2+ hours in peak season","gettingHere":null},{"time":"10:50am","name":"Santa Maria Novella","coords":[43.7746,11.2493],"cantMiss":true,"duration":"45 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Santa+Maria+Novella+Florence","desc":"The principal Dominican church in Florence, its striking green-and-white marble facade designed by Leon Battista Alberti in the 1450s. Inside is Masaccio's Trinity (1427), the first painting in Western art to use mathematically correct linear perspective — visitors at the time reportedly thought there was a real hole in the wall. Ghirlandaio's fresco cycle in the main chapel is said to have influenced the young Michelangelo, who trained in his workshop.","ticket":"🎟️ ~€7.50","warning":null,"gettingHere":"~20 min walk southwest from the Accademia"},{"time":"12:15pm","name":"Lunch — near the Duomo","type":"meal","desc":"TBD."},{"time":"1:15pm","name":"Duomo interior + Baptistery","coords":[43.773251,11.255474],"cantMiss":true,"duration":"60-75 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Cattedrale+di+Santa+Maria+del+Fiore","desc":"The cathedral itself is free to walk into — a vast, deliberately austere Gothic interior, a striking contrast to the ornate marble exterior. Brunelleschi's dome soars overhead, still the largest masonry dome ever built, completed in 1436 without the flying buttresses or visible scaffolding that engineers of the time thought were required. The adjacent Baptistery, older than the cathedral itself, holds Ghiberti's gilded bronze doors, which Michelangelo nicknamed the 'Gates of Paradise.'","ticket":"🚪 Free (Baptistery ticketed separately, small fee)","warning":null,"gettingHere":"~17 min walk east from Santa Maria Novella"},{"time":"2:30pm","name":"Campanile di Giotto — climb","coords":[43.773251,11.255474],"cantMiss":true,"duration":"40-50 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Campanile+di+Giotto+Florence","desc":"Giotto's bell tower, begun in 1334 — 414 steps up a straight tower with landings to rest along the way, notably easier than the dome climb next door. No advance timed-slot required. The real payoff: this is the one spot in the whole complex where you can actually see Brunelleschi's dome itself, up close — the famous silhouette you can't see while standing on top of it.","ticket":"🎟️ Duomo complex pass — no advance booking needed","warning":null,"gettingHere":"Right next to the Duomo, same piazza"},{"time":"Evening","name":"Dinner — historic center","type":"meal","desc":"TBD."}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:00am","name":"Accademia Gallery — David","timeSensitive":true,"coords":[43.7769,11.2589],"cantMiss":true,"duration":"60-90 min","access":"ticketed","gettingHere":"~12 min walk from the hotel, north through the historic center toward Piazza San Marco","mapLink":"https://www.google.com/maps/search/?api=1&query=Galleria+dell%27Accademia+Florence","desc":"Michelangelo carved David from a single 17-foot block of Carrara marble that two earlier sculptors had already given up on as flawed. He was 26. Finished in 1504, the statue originally stood outside Palazzo Vecchio as a civic symbol — Florence, like David, defiant against more powerful enemies (Rome, Milan). The gallery also holds his four unfinished 'Prisoners,' figures seemingly still trapped inside the stone, and a long corridor of Florentine Gothic and early Renaissance paintings.","ticket":"🎟️ Book 6-8 weeks ahead for June","warning":"Same-day walk-up queues run 2+ hours in peak season"},{"time":"10:50am","name":"Santa Maria Novella","coords":[43.7746,11.2493],"cantMiss":true,"duration":"45 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Santa+Maria+Novella+Florence","desc":"The principal Dominican church in Florence, its striking green-and-white marble facade designed by Leon Battista Alberti in the 1450s. Inside is Masaccio's Trinity (1427), the first painting in Western art to use mathematically correct linear perspective — visitors at the time reportedly thought there was a real hole in the wall. Ghirlandaio's fresco cycle in the main chapel is said to have influenced the young Michelangelo, who trained in his workshop.","ticket":"🎟️ ~€7.50","warning":null,"gettingHere":"~20 min walk southwest from the Accademia"},{"time":"12:15pm","name":"Lunch — near the Duomo","type":"meal","desc":"TBD.","gettingHere":"~5 min walk from Santa Maria Novella"},{"time":"2:00pm","name":"Duomo interior + Baptistery","coords":[43.773251,11.255474],"cantMiss":true,"duration":"60-75 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Cattedrale+di+Santa+Maria+del+Fiore","desc":"The cathedral itself is free to walk into — a vast, deliberately austere Gothic interior, a striking contrast to the ornate marble exterior. Brunelleschi's dome soars overhead, still the largest masonry dome ever built, completed in 1436 without the flying buttresses or visible scaffolding that engineers of the time thought were required. The adjacent Baptistery, older than the cathedral itself, holds Ghiberti's gilded bronze doors, which Michelangelo nicknamed the 'Gates of Paradise.'","ticket":"🚪 Free (Baptistery ticketed separately, small fee)","warning":null,"gettingHere":"No rush after lunch — it is a short ~5 min walk from wherever you eat near the Duomo, so take your time before the 2pm start"},{"time":"3:30pm","name":"Campanile di Giotto — climb","coords":[43.773251,11.255474],"cantMiss":true,"duration":"40-50 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Campanile+di+Giotto+Florence","desc":"Giotto's bell tower, begun in 1334 — 414 steps up a straight tower with landings to rest along the way, notably easier than the dome climb next door. No advance timed-slot required. The real payoff: this is the one spot in the whole complex where you can actually see Brunelleschi's dome itself, up close — the famous silhouette you can't see while standing on top of it.","ticket":"🎟️ Duomo complex pass — no advance booking needed","warning":null,"gettingHere":"~1 min walk, same piazza as the Duomo — with only these two stops this afternoon, there is no need to rush between them"},{"time":"Evening","name":"Dinner — historic center","type":"meal","desc":"TBD.","gettingHere":"Short walk from the Campanile, wherever looks good"}]
   },
   { date: new Date(2027,5,8), block: "florence", title: "Florence: Uffizi, Piazza della Signoria, Santa Croce, Pitti, Boboli, Sunset", sub: "Florence: Uffizi, Piazza della Signoria, Santa Croce, Pitti, Boboli, Sunset",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -565,7 +576,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Uffizi+Gallery+Florence/Piazza+della+Signoria+Florence/Basilica+di+Santa+Croce+Florence/Palazzo+Pitti+Florence/Boboli+Gardens+Florence/Piazzale+Michelangelo+Florence/",
     townRoutes: null,
     driverToday: false,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:00am","name":"Uffizi Gallery","timeSensitive":true,"coords":[43.7678,11.2553],"cantMiss":true,"duration":"2.5-3 hrs","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Uffizi+Gallery+Florence","desc":"Built in 1560 as the Medici's administrative offices ('uffizi'), converted to a gallery by the family in the 16th century — one of the first museums in the modern sense. Home to Botticelli's Birth of Venus and Primavera, Leonardo's Annunciation, and a collection that traces Italian painting from Giotto through the High Renaissance. The Vasari Corridor above once let the Medici walk unseen from the Palazzo Vecchio, through the Uffizi, across the Ponte Vecchio, to Palazzo Pitti.","ticket":"🎟️ Book 4-6 weeks ahead for June","warning":null,"gettingHere":null},{"time":"12:00pm","name":"Piazza della Signoria & Loggia dei Lanzi","coords":[43.76972,11.25556],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Signoria+Florence","desc":"Florence's outdoor sculpture gallery — Cellini's bronze Perseus holding Medusa's severed head, and the Rape of the Sabine Women, stand in the open loggia, free to see anytime.","ticket":null,"warning":null,"gettingHere":"Right outside the Uffizi"},{"time":"12:45pm","name":"Santa Croce","coords":[43.768417,11.262722],"cantMiss":true,"duration":"90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Santa+Croce+Florence","desc":"Franciscan basilica, and the 'Temple of the Italian Glories' — the tombs of Michelangelo, Galileo (whose remains weren't allowed a religious burial here until 1737, a century after his death, due to his heresy conviction), and Machiavelli, plus a monument to Dante, whose actual tomb is in Ravenna, where he died in exile. Brunelleschi's Pazzi Chapel in the cloister is considered a masterpiece of early Renaissance architecture.","ticket":"🎟️ ~€8","warning":null,"gettingHere":"~10 min walk east"},{"time":"2:15pm","name":"Lunch — Santa Croce/Sant'Ambrogio","type":"meal","desc":"TBD."},{"time":"3:30pm","name":"Palazzo Pitti — optional","coords":[43.7648,11.2501],"cantMiss":false,"duration":"60-90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Palazzo+Pitti+Florence","desc":"Optional, pick one or the other with Boboli if the day is running long — you'll have already done Uffizi and Santa Croce by this point. Built for a rival Florentine banking family in 1458, bought by the Medici in 1549 when they outgrew the Palazzo Vecchio. Now houses several museums including the Palatine Gallery's Raphaels and Titians.","ticket":"🎟️","warning":null,"gettingHere":"~8 min walk to Ponte Vecchio, cross into Oltrarno"},{"time":"5:00pm","name":"Boboli Gardens — optional","coords":[43.7625,11.24833],"cantMiss":true,"duration":"60 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Boboli+Gardens+Florence","desc":"Optional, pick one or the other with Pitti if the day is running long. The Medici's grand formal garden behind Palazzo Pitti, laid out from 1550 — one of the earliest and most influential examples of the Italian garden style, later copied across Europe including at Versailles. Room for the kids to run after two museum-heavy stops.","ticket":"🎟️","warning":null,"gettingHere":"Right behind Palazzo Pitti — the garden entrance is inside the palace courtyard"},{"time":"9:00pm","name":"Piazzale Michelangelo","coords":[43.762778,11.265056],"cantMiss":true,"duration":"60+ min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazzale+Michelangelo+Florence","desc":"Built in 1869, offering the classic panoramic view of Florence — domes, towers, and the Arno laid out below, with a bronze copy of David at its center. Timed for sunset, ~9:00-9:15pm in June.","ticket":null,"warning":null,"gettingHere":"Try walking via Costa San Giorgio and Via del Forte di San Giorgio, past Forte di Belvedere — shorter and more direct than going all the way around. If that route is closed, either walk the long way around (~30-40 min, steep) or take a taxi (~€10-15, ~10 min)."},{"time":"Dinner","name":"Dinner — near Piazzale Michelangelo","type":"meal","desc":"TBD."}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:00am","name":"Uffizi Gallery","timeSensitive":true,"coords":[43.7678,11.2553],"cantMiss":true,"duration":"2.5-3 hrs","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Uffizi+Gallery+Florence","desc":"Built in 1560 as the Medici's administrative offices ('uffizi'), converted to a gallery by the family in the 16th century — one of the first museums in the modern sense. Home to Botticelli's Birth of Venus and Primavera, Leonardo's Annunciation, and a collection that traces Italian painting from Giotto through the High Renaissance. The Vasari Corridor above once let the Medici walk unseen from the Palazzo Vecchio, through the Uffizi, across the Ponte Vecchio, to Palazzo Pitti.","ticket":"🎟️ Book 4-6 weeks ahead for June","warning":null,"gettingHere":"~5 min walk from the hotel, toward the river"},{"time":"12:00pm","name":"Piazza della Signoria & Loggia dei Lanzi","coords":[43.76972,11.25556],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Signoria+Florence","desc":"Florence's outdoor sculpture gallery — Cellini's bronze Perseus holding Medusa's severed head, and the Rape of the Sabine Women, stand in the open loggia, free to see anytime.","ticket":null,"warning":null,"gettingHere":"~2 min walk from the Uffizi exit"},{"time":"12:45pm","name":"Santa Croce","coords":[43.768417,11.262722],"cantMiss":true,"duration":"90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Santa+Croce+Florence","desc":"Franciscan basilica, and the 'Temple of the Italian Glories' — the tombs of Michelangelo, Galileo (whose remains weren't allowed a religious burial here until 1737, a century after his death, due to his heresy conviction), and Machiavelli, plus a monument to Dante, whose actual tomb is in Ravenna, where he died in exile. Brunelleschi's Pazzi Chapel in the cloister is considered a masterpiece of early Renaissance architecture.","ticket":"🎟️ ~€8","warning":null,"gettingHere":"~10 min walk east"},{"time":"2:15pm","name":"Lunch — Santa Croce/Sant'Ambrogio","type":"meal","desc":"TBD.","gettingHere":"~2 min walk, right outside Santa Croce"},{"time":"3:30pm","name":"Palazzo Pitti — optional","coords":[43.7648,11.2501],"cantMiss":false,"duration":"60-90 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Palazzo+Pitti+Florence","desc":"Optional, pick one or the other with Boboli if the day is running long — you'll have already done Uffizi and Santa Croce by this point. Built for a rival Florentine banking family in 1458, bought by the Medici in 1549 when they outgrew the Palazzo Vecchio. Now houses several museums including the Palatine Gallery's Raphaels and Titians.","ticket":"🎟️","warning":null,"gettingHere":"~8 min walk to Ponte Vecchio, cross into Oltrarno"},{"time":"5:00pm","name":"Boboli Gardens — optional","coords":[43.7625,11.24833],"cantMiss":true,"duration":"60 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Boboli+Gardens+Florence","desc":"Optional, pick one or the other with Pitti if the day is running long. The Medici's grand formal garden behind Palazzo Pitti, laid out from 1550 — one of the earliest and most influential examples of the Italian garden style, later copied across Europe including at Versailles. Room for the kids to run after two museum-heavy stops.","ticket":"🎟️","warning":null,"gettingHere":"~2 min walk behind Palazzo Pitti — the garden entrance is inside the palace courtyard"},{"time":"9:00pm","name":"Piazzale Michelangelo","coords":[43.762778,11.265056],"cantMiss":true,"duration":"60+ min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazzale+Michelangelo+Florence","desc":"Built in 1869, offering the classic panoramic view of Florence — domes, towers, and the Arno laid out below, with a bronze copy of David at its center. Timed for sunset, ~9:00-9:15pm in June.","ticket":null,"warning":null,"gettingHere":"Try walking via Costa San Giorgio and Via del Forte di San Giorgio, past Forte di Belvedere — shorter and more direct than going all the way around. If that route is closed, either walk the long way around (~30-40 min, steep) or take a taxi (~€10-15, ~10 min)."},{"time":"Dinner","name":"Dinner — near Piazzale Michelangelo","type":"meal","desc":"TBD.","gettingHere":"Right there at Piazzale Michelangelo, or a short walk back down"}]
   },
   { date: new Date(2027,5,9), block: "florence", title: "Bologna Day-Trip", sub: "Bologna Day-Trip",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -574,7 +585,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Firenze+Santa+Maria+Novella+Station/Via+Piella+Bologna/Piazza+Maggiore+Bologna/Archiginnasio+Bologna/Via+Pescherie+Vecchie+Bologna/Basilica+di+Santa+Maria+della+Vita+Bologna/Due+Torri+Bologna/",
     townRoutes: [{"label":"Bologna only (walking)","url":"https://www.google.com/maps/dir/Via+Piella+Bologna/Piazza+Maggiore+Bologna/Archiginnasio+Bologna/Via+Pescherie+Vecchie+Bologna/Basilica+di+Santa+Maria+della+Vita+Bologna/Due+Torri+Bologna/"}],
     driverToday: false,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:55am","name":"Via Piella — the secret window","coords":[44.499128,11.344842],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Piella+Bologna","desc":"A small window in an unmarked wall looking down onto one of Bologna's few remaining visible canals — the city once had over 60km of navigable waterways used to transport goods and power silk mills; most were covered over in the 20th century.","ticket":null,"warning":null,"gettingHere":null},{"time":"10:30am","name":"Piazza Maggiore & San Petronio","coords":[44.4938,11.3428],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Maggiore+Bologna","desc":"Bologna's grand main square, dominated by the Basilica of San Petronio — construction began in 1390 with plans to make it larger than St. Peter's in Rome. The Church intervened, funds were redirected to found the university instead, and the facade remains famously unfinished, half-clad in marble, half bare brick. It's free to enter one of the largest church interiors in the world.","ticket":null,"warning":null,"gettingHere":"~20 min walk down Via Indipendenza from the station"},{"time":"11:00am","name":"Archiginnasio","coords":[44.4926,11.3432],"cantMiss":false,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Archiginnasio+Bologna","desc":"The main building of Europe's oldest university, in use from 1563 until 1803. The walls and ceilings of its corridors are covered in thousands of painted coats of arms of past students and rectors. A small fee gets you into the 17th-century Anatomical Theatre, where public dissections once drew crowds.","ticket":"🎟️ small fee","warning":null,"gettingHere":"Right behind San Petronio"},{"time":"11:40am","name":"Via degli Orefici → Via Pescherie Vecchie","coords":[44.4939,11.3436],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Pescherie+Vecchie+Bologna","desc":"The entry streets of the Quadrilatero, Bologna's medieval market district — old fishmongers' stalls (pescherie) now sell fresh pasta, cheese, and cured meats spilling onto the cobblestones.","ticket":null,"warning":null,"gettingHere":"~5 min walk from Archiginnasio, back through Piazza Maggiore"},{"time":"12:00pm","name":"Santa Maria della Vita","coords":[44.493398,11.344617],"cantMiss":false,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Santa+Maria+della+Vita+Bologna","desc":"A small church holding one of Italy's most viscerally powerful Renaissance sculptures: Niccolò dell'Arca's life-sized terracotta Compianto sul Cristo morto (Lamentation over the Dead Christ), c. 1463 — figures frozen mid-scream and mid-grief around Christ's body.","ticket":null,"warning":null,"gettingHere":"A couple minutes further into the Quadrilatero"},{"time":"12:30pm","name":"Via Drapperie → Via Clavature → Via de' Ranocchi","coords":[44.4936,11.3444],"cantMiss":false,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+de%27+Ranocchi+Bologna","desc":"Continuing through the Quadrilatero. Via Ranocchi is home to L'Osteria del Sole, one of Bologna's oldest taverns, serving wine since 1465 (you bring your own food; they just pour).","ticket":null,"warning":null,"gettingHere":"Continuing directly on from Santa Maria della Vita"},{"time":"12:30pm","name":"Lunch — in the Quadrilatero","type":"meal","desc":"Along Via Drapperie / Clavature / Ranocchi."},{"time":"2:00pm","name":"Due Torri","coords":[44.494961,11.346232],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Due+Torri+Bologna","desc":"The Two Towers — Asinelli (97m, one of the tallest medieval towers in Italy) and the visibly leaning Garisenda, both built around 1109-1119 by rival noble families as status symbols, when Bologna once had well over 100 such towers. Viewing from the base only today.","ticket":null,"warning":null,"gettingHere":"~5 min walk from Via Ranocchi"}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"9:55am","name":"Via Piella — the secret window","coords":[44.499128,11.344842],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Piella+Bologna","desc":"A small window in an unmarked wall looking down onto one of Bologna's few remaining visible canals — the city once had over 60km of navigable waterways used to transport goods and power silk mills; most were covered over in the 20th century.","ticket":null,"warning":null,"gettingHere":"~10 min walk to Firenze SMN, ~35 min train to Bologna Centrale, then ~20 min walk down Via Indipendenza"},{"time":"10:30am","name":"Piazza Maggiore & San Petronio","coords":[44.4938,11.3428],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Maggiore+Bologna","desc":"Bologna's grand main square, dominated by the Basilica of San Petronio — construction began in 1390 with plans to make it larger than St. Peter's in Rome. The Church intervened, funds were redirected to found the university instead, and the facade remains famously unfinished, half-clad in marble, half bare brick. It's free to enter one of the largest church interiors in the world.","ticket":null,"warning":null,"gettingHere":"~20 min walk down Via Indipendenza from the station"},{"time":"11:00am","name":"Archiginnasio","coords":[44.4926,11.3432],"cantMiss":false,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Archiginnasio+Bologna","desc":"The main building of Europe's oldest university, in use from 1563 until 1803. The walls and ceilings of its corridors are covered in thousands of painted coats of arms of past students and rectors. A small fee gets you into the 17th-century Anatomical Theatre, where public dissections once drew crowds.","ticket":"🎟️ small fee","warning":null,"gettingHere":"~2 min walk, right behind San Petronio"},{"time":"11:40am","name":"Via degli Orefici → Via Pescherie Vecchie","coords":[44.4939,11.3436],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Pescherie+Vecchie+Bologna","desc":"The entry streets of the Quadrilatero, Bologna's medieval market district — old fishmongers' stalls (pescherie) now sell fresh pasta, cheese, and cured meats spilling onto the cobblestones.","ticket":null,"warning":null,"gettingHere":"~5 min walk from Archiginnasio, back through Piazza Maggiore"},{"time":"12:00pm","name":"Santa Maria della Vita","coords":[44.493398,11.344617],"cantMiss":false,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Santa+Maria+della+Vita+Bologna","desc":"A small church holding one of Italy's most viscerally powerful Renaissance sculptures: Niccolò dell'Arca's life-sized terracotta Compianto sul Cristo morto (Lamentation over the Dead Christ), c. 1463 — figures frozen mid-scream and mid-grief around Christ's body.","ticket":null,"warning":null,"gettingHere":"~3 min walk further into the Quadrilatero"},{"time":"12:30pm","name":"Via Drapperie → Via Clavature → Via de' Ranocchi","coords":[44.4936,11.3444],"cantMiss":false,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+de%27+Ranocchi+Bologna","desc":"Continuing through the Quadrilatero. Via Ranocchi is home to L'Osteria del Sole, one of Bologna's oldest taverns, serving wine since 1465 (you bring your own food; they just pour).","ticket":null,"warning":null,"gettingHere":"~2 min walk, continuing directly on from Santa Maria della Vita"},{"time":"12:30pm","name":"Lunch — in the Quadrilatero","type":"meal","desc":"Along Via Drapperie / Clavature / Ranocchi.","gettingHere":"~2 min walk, continuing on from Via de' Ranocchi"},{"time":"2:00pm","name":"Due Torri","coords":[44.494961,11.346232],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Due+Torri+Bologna","desc":"The Two Towers — Asinelli (97m, one of the tallest medieval towers in Italy) and the visibly leaning Garisenda, both built around 1109-1119 by rival noble families as status symbols, when Bologna once had well over 100 such towers. Viewing from the base only today.","ticket":null,"warning":null,"gettingHere":"~5 min walk from Via Ranocchi"},{"time":"Evening","name":"Dinner — back in Florence","type":"meal","gettingHere":"~35 min train back to Firenze SMN, then a short walk or taxi","desc":"TBD, near the hotel."}]
   },
   { date: new Date(2027,5,10), block: "florence", title: "Venice — Arrival Day", sub: "Venice — Arrival Day",
     hotelPin: {"lat":45.4405,"lng":12.3195,"name":"AC Hotel Venezia"},
@@ -583,7 +594,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/AC+Hotel+Venezia/Jewish+Ghetto+Venice/Fondamenta+della+Misericordia+Venice/Rialto+Bridge+Venice/Santa+Maria+dei+Miracoli+Venice/Piazza+San+Marco+Venice/",
     townRoutes: null,
     driverToday: false,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included, before the train to Venice."},{"time":"10:15am","name":"Jewish Ghetto","coords":[45.44528,12.32639],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Jewish+Ghetto+Venice","desc":"Established in 1516, the oldest Jewish ghetto in the world and the origin of the word itself (from the Venetian 'geto,' the foundry once located here). Home to five historic synagogues, some tucked invisibly into upper floors of ordinary-looking buildings.","ticket":null,"warning":null,"gettingHere":"A few minutes from the hotel"},{"time":"10:45am","name":"Fondamenta della Misericordia","coords":[45.4444,12.3298],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Fondamenta+della+Misericordia+Venice","desc":"The prettiest canal-side stretch in Cannaregio, lined with small bacari (wine bars) rather than the tourist crowds of the main routes.","ticket":null,"warning":null,"gettingHere":"A short walk from the Ghetto"},{"time":"11:05am","name":"Ponte Chiodo","coords":[45.442879,12.3346141],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/place/Ponte+Chiodo/@45.442879,12.3346141,21z","desc":"One of the last bridges left in Venice with no railings — a reminder of how all the city's bridges looked before 19th-century safety additions.","ticket":null,"warning":null,"gettingHere":"Just off the fondamenta"},{"time":"","name":"Walk past: Calle Varisco","coords":[45.4432,12.335],"cantMiss":false,"duration":"2 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Calle+Varisco+Venice","desc":"The narrowest street in Venice — just 53cm at its tightest point. A fun quick detour, not a formal stop.","ticket":null,"warning":null,"gettingHere":"A couple minutes toward Rialto"},{"time":"11:35am","name":"Rialto Bridge & Market","coords":[45.438,12.336],"cantMiss":true,"duration":"40 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Rialto+Bridge+Venice","desc":"The oldest bridge across the Grand Canal, completed in 1591 — for centuries the only way to cross on foot. The market at its foot has traded produce and fish since the 11th century.","ticket":null,"warning":null,"gettingHere":"Continuing toward Rialto"},{"time":"12:15pm","name":"T Fondaco Rooftop Terrace","timeSensitive":true,"coords":[45.4382733,12.3365754],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/place/T+Fondaco+Rooftop+Terrace/@45.4382733,12.3359317,19z","desc":"A free viewing terrace over the Grand Canal, inside what was once the German merchants' trading house, later a post office, now a department store. Book the free time slot in advance.","ticket":null,"warning":"Free slots must be reserved ahead — first come, first served","gettingHere":"Right by Rialto"},{"time":"12:45pm","name":"Lunch — Venice","type":"meal","desc":"TBD."},{"time":"2:00pm","name":"Santa Maria dei Miracoli","coords":[45.439511,12.339271],"cantMiss":true,"duration":"20 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Santa+Maria+dei+Miracoli+Venice","desc":"Venice's 'marble jewel box' — a small Renaissance church clad entirely in polychrome marble, built 1481-1489 by Pietro Lombardo, one of the earliest and most refined examples of early Venetian Renaissance architecture.","ticket":"🎟️ ~€3/adult","warning":null,"gettingHere":"A walk from Rialto, past lunch"},{"time":"2:30pm","name":"Libreria Acqua Alta","coords":[45.4368,12.3402],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Libreria+Acqua+Alta+Venice","desc":"The famous bookshop that stores its stock in bathtubs, gondolas, and a full-size boat — a defense against Venice's periodic flooding. A staircase made entirely of old encyclopedias leads to a canal-view terrace out back.","ticket":null,"warning":null,"gettingHere":"Toward Santa Maria Formosa"},{"time":"3:15pm","name":"Scala Contarini del Bovolo","coords":[45.4372,12.3346],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Scala+Contarini+del+Bovolo+Venice","desc":"A 15th-century external spiral staircase, tucked down a hidden calle off Campo Manin — one of Venice's genuine hidden gems, rarely crowded. 'Bovolo' means snail in Venetian dialect.","ticket":null,"warning":null,"gettingHere":"Sits almost exactly between Rialto and San Marco"},{"time":"4:00pm","name":"Piazza San Marco","coords":[45.43389,12.33806],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Marco+Venice","desc":"The political and religious heart of Venice for over a thousand years, Napoleon reportedly called it 'the drawing room of Europe.'","ticket":null,"warning":null,"gettingHere":"Continuing toward the water"},{"time":"4:15pm","name":"St. Mark's Basilica — exterior","coords":[45.4345,12.3397],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=St+Mark%27s+Basilica+Venice","desc":"Byzantine domes and golden mosaics visible from outside; the loot of centuries of Venetian trade and conquest is built into its very walls, including the four bronze horses looted from Constantinople in 1204.","ticket":null,"warning":null,"gettingHere":"Right there on the piazza"},{"time":"4:45pm","name":"Doge's Palace + Bridge of Sighs — exterior","coords":[45.4337,12.3406],"cantMiss":false,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Doge%27s+Palace+Venice","desc":"The Gothic seat of Venetian government for centuries. The Bridge of Sighs, connecting the palace to the old prisons, is viewable from Ponte della Paglia — condemned prisoners supposedly sighed at their last glimpse of the city through its windows.","ticket":null,"warning":null,"gettingHere":"Right next to the Basilica"},{"time":"5:15pm","name":"Gondola ride","timeSensitive":true,"coords":[45.4338,12.3369],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Bacino+Orseolo+Venice","desc":"Venice's main gondola basin, tucked just behind Piazza San Marco. Fixed rate, one gondola fits all four of you.","ticket":"~€90 for 30 min","warning":null,"gettingHere":"A short walk to Bacino Orseolo"},{"time":"7:30pm","name":"Dinner — Da Mamo","type":"meal","coords":[45.4373,12.3363],"desc":"Between San Marco and Rialto, ~10 min walk from the square."}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included, before the train to Venice."},{"time":"10:15am","name":"Jewish Ghetto","coords":[45.44528,12.32639],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Jewish+Ghetto+Venice","desc":"Established in 1516, the oldest Jewish ghetto in the world and the origin of the word itself (from the Venetian 'geto,' the foundry once located here). Home to five historic synagogues, some tucked invisibly into upper floors of ordinary-looking buildings.","ticket":null,"warning":null,"gettingHere":"~5 min walk from the hotel"},{"time":"10:45am","name":"Fondamenta della Misericordia","coords":[45.4444,12.3298],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Fondamenta+della+Misericordia+Venice","desc":"The prettiest canal-side stretch in Cannaregio, lined with small bacari (wine bars) rather than the tourist crowds of the main routes.","ticket":null,"warning":null,"gettingHere":"~4 min walk from the Ghetto"},{"time":"11:05am","name":"Ponte Chiodo","coords":[45.442879,12.3346141],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/place/Ponte+Chiodo/@45.442879,12.3346141,21z","desc":"One of the last bridges left in Venice with no railings — a reminder of how all the city's bridges looked before 19th-century safety additions.","ticket":null,"warning":null,"gettingHere":"~2 min walk, just off the fondamenta"},{"time":"","name":"Walk past: Calle Varisco","coords":[45.4432,12.335],"cantMiss":false,"duration":"2 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Calle+Varisco+Venice","desc":"The narrowest street in Venice — just 53cm at its tightest point. A fun quick detour, not a formal stop.","ticket":null,"warning":null,"gettingHere":"~3 min walk toward Rialto"},{"time":"11:35am","name":"Rialto Bridge & Market","coords":[45.438,12.336],"cantMiss":true,"duration":"40 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Rialto+Bridge+Venice","desc":"The oldest bridge across the Grand Canal, completed in 1591 — for centuries the only way to cross on foot. The market at its foot has traded produce and fish since the 11th century.","ticket":null,"warning":null,"gettingHere":"~5 min walk, continuing toward Rialto"},{"time":"12:15pm","name":"T Fondaco Rooftop Terrace","timeSensitive":true,"coords":[45.4382733,12.3365754],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/place/T+Fondaco+Rooftop+Terrace/@45.4382733,12.3359317,19z","desc":"A free viewing terrace over the Grand Canal, inside what was once the German merchants' trading house, later a post office, now a department store. Book the free time slot in advance.","ticket":null,"warning":"Free slots must be reserved ahead — first come, first served","gettingHere":"~1 min walk, right by Rialto"},{"time":"12:45pm","name":"Lunch — Venice","type":"meal","desc":"TBD.","gettingHere":"~5 min walk from T Fondaco"},{"time":"2:00pm","name":"Santa Maria dei Miracoli","coords":[45.439511,12.339271],"cantMiss":true,"duration":"20 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Santa+Maria+dei+Miracoli+Venice","desc":"Venice's 'marble jewel box' — a small Renaissance church clad entirely in polychrome marble, built 1481-1489 by Pietro Lombardo, one of the earliest and most refined examples of early Venetian Renaissance architecture.","ticket":"🎟️ ~€3/adult","warning":null,"gettingHere":"~8 min walk from Rialto"},{"time":"2:30pm","name":"Libreria Acqua Alta","coords":[45.4368,12.3402],"cantMiss":true,"duration":"30 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Libreria+Acqua+Alta+Venice","desc":"The famous bookshop that stores its stock in bathtubs, gondolas, and a full-size boat — a defense against Venice's periodic flooding. A staircase made entirely of old encyclopedias leads to a canal-view terrace out back.","ticket":null,"warning":null,"gettingHere":"~6 min walk toward Santa Maria Formosa"},{"time":"3:15pm","name":"Scala Contarini del Bovolo","coords":[45.4372,12.3346],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Scala+Contarini+del+Bovolo+Venice","desc":"A 15th-century external spiral staircase, tucked down a hidden calle off Campo Manin — one of Venice's genuine hidden gems, rarely crowded. 'Bovolo' means snail in Venetian dialect.","ticket":null,"warning":null,"gettingHere":"~7 min walk, roughly halfway between Rialto and San Marco"},{"time":"4:00pm","name":"Piazza San Marco","coords":[45.43389,12.33806],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Marco+Venice","desc":"The political and religious heart of Venice for over a thousand years, Napoleon reportedly called it 'the drawing room of Europe.'","ticket":null,"warning":null,"gettingHere":"~6 min walk, continuing toward the water"},{"time":"4:15pm","name":"St. Mark's Basilica — exterior","coords":[45.4345,12.3397],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=St+Mark%27s+Basilica+Venice","desc":"Byzantine domes and golden mosaics visible from outside; the loot of centuries of Venetian trade and conquest is built into its very walls, including the four bronze horses looted from Constantinople in 1204.","ticket":null,"warning":null,"gettingHere":"~1 min walk, right there on the piazza"},{"time":"4:45pm","name":"Doge's Palace + Bridge of Sighs — exterior","coords":[45.4337,12.3406],"cantMiss":false,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Doge%27s+Palace+Venice","desc":"The Gothic seat of Venetian government for centuries. The Bridge of Sighs, connecting the palace to the old prisons, is viewable from Ponte della Paglia — condemned prisoners supposedly sighed at their last glimpse of the city through its windows.","ticket":null,"warning":null,"gettingHere":"~1 min walk, right next to the Basilica"},{"time":"5:15pm","name":"Gondola ride","timeSensitive":true,"coords":[45.4338,12.3369],"cantMiss":true,"duration":"30 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Bacino+Orseolo+Venice","desc":"Venice's main gondola basin, tucked just behind Piazza San Marco. Fixed rate, one gondola fits all four of you.","ticket":"~€90 for 30 min","warning":null,"gettingHere":"~4 min walk to Bacino Orseolo"},{"time":"7:30pm","name":"Dinner — Da Mamo","type":"meal","coords":[45.4373,12.3363],"desc":"Between San Marco and Rialto, ~10 min walk from the square.","gettingHere":"~10 min walk from Bacino Orseolo, between San Marco and Rialto"}]
   },
   { date: new Date(2027,5,11), block: "florence", title: "Murano & Return to Florence", sub: "Murano & Return to Florence",
     hotelPin: {"lat":45.4405,"lng":12.3195,"name":"AC Hotel Venezia"},
@@ -592,7 +603,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Ferrovia+Vaporetto+Venice/Wave+Murano+Glass/Basilica+dei+Santi+Maria+e+Donato+Murano/",
     townRoutes: null,
     driverToday: false,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"8:45am","name":"Ferrovia vaporetto stop","type":"transport","coords":[45.4413,12.321],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Ferrovia+Vaporetto+Venice","desc":"Multiple floating docks (A-E) serve different lines. Line 3 runs direct to Murano.","ticket":null,"warning":null,"gettingHere":"Right outside the station, near the hotel"},{"time":"10:00am","name":"Wave Murano Glass — guided tour","timeSensitive":true,"coords":[45.4595,12.3502],"cantMiss":true,"duration":"45-60 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Wave+Murano+Glass","desc":"Small-group tour (max 8), watching artisans shape molten glass in a furnace reaching 1400°C, with the history and technique explained by an English-speaking guide.","ticket":"🎟️ ~€29/pp — book ~1 month ahead","warning":"Genuine open-flame heat exposure — worth a quick check that the kids are comfortable near a working furnace","gettingHere":"A short walk from Murano Colonna, ~20-25 min boat ride from Ferrovia"},{"time":"","name":"Fondamenta dei Vetrai","coords":[45.4596,12.3495],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Fondamenta+dei+Vetrai+Murano","desc":"Murano's main canal-side street, lined with glass workshops and showrooms — look for the 'Vetro Artistico Murano' certification to spot authentic pieces.","ticket":null,"warning":null,"gettingHere":"Right from the Wave Glass studio"},{"time":"11:30am","name":"Basilica dei Santi Maria e Donato","coords":[45.4614,12.354],"cantMiss":true,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+dei+Santi+Maria+e+Donato+Murano","desc":"A 12th-century Byzantine mosaic floor, and behind the altar: four giant bones, over a meter long, said to belong to a dragon slain by Saint Donatus — almost certainly whale bones, but the legend is the point.","ticket":"🚪 Free","warning":null,"gettingHere":"Continuing along the canal, further into the island"},{"time":"1:15pm","name":"Lunch — along the Cannaregio walk back","type":"meal","desc":"TBD, after the Fondamente Nove crossing."}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati","type":"meal","desc":"Included."},{"time":"8:45am","name":"Ferrovia vaporetto stop","type":"transport","coords":[45.4413,12.321],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Ferrovia+Vaporetto+Venice","desc":"Multiple floating docks (A-E) serve different lines. Line 3 runs direct to Murano.","ticket":null,"warning":null,"gettingHere":"~2 min walk from the hotel to the vaporetto stop"},{"time":"10:00am","name":"Wave Murano Glass — guided tour","timeSensitive":true,"coords":[45.4595,12.3502],"cantMiss":true,"duration":"45-60 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Wave+Murano+Glass","desc":"Small-group tour (max 8), watching artisans shape molten glass in a furnace reaching 1400°C, with the history and technique explained by an English-speaking guide.","ticket":"🎟️ ~€29/pp — book ~1 month ahead","warning":"Genuine open-flame heat exposure — worth a quick check that the kids are comfortable near a working furnace","gettingHere":"A short walk from Murano Colonna, ~20-25 min boat ride from Ferrovia"},{"time":"","name":"Fondamenta dei Vetrai","coords":[45.4596,12.3495],"cantMiss":false,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Fondamenta+dei+Vetrai+Murano","desc":"Murano's main canal-side street, lined with glass workshops and showrooms — look for the 'Vetro Artistico Murano' certification to spot authentic pieces.","ticket":null,"warning":null,"gettingHere":"~2 min walk from the Wave Glass studio"},{"time":"11:30am","name":"Basilica dei Santi Maria e Donato","coords":[45.4614,12.354],"cantMiss":true,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+dei+Santi+Maria+e+Donato+Murano","desc":"A 12th-century Byzantine mosaic floor, and behind the altar: four giant bones, over a meter long, said to belong to a dragon slain by Saint Donatus — almost certainly whale bones, but the legend is the point.","ticket":"🚪 Free","warning":null,"gettingHere":"~6 min walk further along the canal into the island"},{"time":"1:15pm","name":"Lunch — along the Cannaregio walk back","type":"meal","desc":"TBD, after the Fondamente Nove crossing.","gettingHere":"Continuing the walk from Fondamente Nove back toward the hotel"},{"time":"Evening","name":"Dinner — back in Florence","type":"meal","gettingHere":"~2 hr train back to Firenze SMN","desc":"TBD, near the hotel."}]
   },
   { date: new Date(2027,5,12), block: "florence", title: "Siena & San Gimignano — Private Driver", sub: "Siena & San Gimignano — Private Driver",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -601,7 +612,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Piazza+del+Campo+Siena/Siena+Cathedral+Duomo/Porta+San+Giovanni+San+Gimignano/Piazza+della+Cisterna+San+Gimignano/Porta+San+Matteo+San+Gimignano/",
     townRoutes: [{"label":"Siena only (walking)","url":"https://www.google.com/maps/dir/Piazza+del+Campo+Siena/Palazzo+Pubblico+Siena/Torre+del+Mangia+Siena/Via+di+Citta+Siena/Siena+Cathedral+Duomo/Piazza+San+Giovanni+Siena/Facciatone+Siena/"},{"label":"San Gimignano only (walking)","url":"https://www.google.com/maps/dir/Porta+San+Giovanni+San+Gimignano/Via+San+Giovanni+San+Gimignano/Piazza+della+Cisterna+San+Gimignano/Piazza+del+Duomo+San+Gimignano/Duomo+di+San+Gimignano/Torre+Grossa+San+Gimignano/Via+San+Matteo+San+Gimignano/Church+of+Sant%27Agostino+San+Gimignano/Porta+San+Matteo+San+Gimignano/"}],
     driverToday: true,
-    stops: [{"section":"SIENA"},{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"9:00am","name":"Pickup at Hotel Davanzati","type":"transport","desc":"Truescany driver."},{"time":"~10:15am","name":"Piazza del Campo","coords":[43.318333,11.331389],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Campo+Siena","desc":"The shell-shaped main square, one of the great medieval piazzas in Europe, sloping down toward the Palazzo Pubblico like an amphitheater. Twice a year (July 2 and August 16) it becomes the track for the Palio, a bareback horse race between Siena's 17 historic contrade (districts) that dates to the Middle Ages.","ticket":null,"warning":null,"gettingHere":"Driver drops you directly here, ~1h15 from Florence"},{"time":"10:35am","name":"Palazzo Pubblico","coords":[43.31833,11.33139],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Palazzo+Pubblico+Siena","desc":"Siena's Gothic town hall, completed in 1310 — courtyard only today, not visiting the Museo Civico interior, which holds Lorenzetti's famous 'Allegory of Good and Bad Government' frescoes.","ticket":null,"warning":null,"gettingHere":"Right on the Campo"},{"time":"10:45am","name":"Torre del Mangia","coords":[43.3182111,11.3322528],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Torre+del+Mangia+Siena","desc":"Siena's 88-meter bell tower, viewing from the base only — not climbing today.","ticket":null,"warning":null,"gettingHere":"Rises directly from Palazzo Pubblico"},{"time":"10:50am","name":"Via di Città → Via del Capitano","coords":[43.2975,11.33],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+di+Citta+Siena","desc":"Lined with medieval palazzi — the connecting walk between the Campo and the Duomo.","ticket":null,"warning":null,"gettingHere":"The direct route from the Campo up to the Duomo"},{"time":"11:00am","name":"Siena Cathedral (Duomo)","coords":[43.317185,11.328823],"cantMiss":true,"duration":"45 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Siena+Cathedral+Duomo","desc":"Consecrated in 1215, one of the great Gothic cathedrals of Italy — striped black-and-white marble inside and out (the colors of Siena's mythical founders' horse), an extraordinary inlaid marble floor with 56 panels made over two centuries, and the vividly frescoed Piccolomini Library. A planned 14th-century expansion to make it the largest church in the world was abandoned after the Black Death — you can still see the unfinished nave walls today.","ticket":"🎟️ OPA SI Pass","warning":null,"gettingHere":"At the top of Via del Capitano"},{"time":"11:45am","name":"Battistero di San Giovanni","coords":[43.3028,11.3297],"cantMiss":false,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Giovanni+Siena","desc":"Tucked beneath the Duomo's apse — because Siena's cathedral sits on a slope, the Baptistery was built as a supporting structure one level down, reached by its own staircase into a small piazza. Jacopo della Quercia's bronze baptismal font inside has panels by Donatello and Ghiberti.","ticket":"🎟️ Same pass","warning":null,"gettingHere":"Down the staircase from the Duomo's apse, into Piazza San Giovanni"},{"time":"12:00pm","name":"Facciatone climb","coords":[43.3033,11.3291],"cantMiss":true,"duration":"20 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Facciatone+Siena","desc":"The unfinished wall of that abandoned 'New Cathedral' expansion, now a viewing platform. A gentler climb than Torre del Mangia — two levels, the lower looking over the rooftops toward the Campo, the upper opening to a full panorama of the walled city and countryside.","ticket":"🎟️ Same pass","warning":null,"gettingHere":"Back up from the Baptistery, at the Duomo level"},{"section":"SAN GIMIGNANO"},{"time":"~1:30pm","name":"Porta San Giovanni","coords":[43.4672,11.0431],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+San+Giovanni+San+Gimignano","desc":"The medieval south gate — main entry point into the walled town.","ticket":null,"warning":null,"gettingHere":"Driver drop-off here, ~40 min from Siena"},{"time":"1:35pm","name":"Via San Giovanni","coords":[43.4678,11.0432],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+San+Giovanni+San+Gimignano","desc":"The main street climbing from the gate toward the town center.","ticket":null,"warning":null,"gettingHere":"Begins right at Porta San Giovanni"},{"time":"1:45pm","name":"Lunch — San Gimignano","coords":[43.468,11.0433],"cantMiss":false,"duration":"45 min","access":"outside","mapLink":null,"desc":"TBD — plenty of options along Via San Giovanni and around Piazza della Cisterna.","ticket":"TBD","warning":null,"gettingHere":"A couple minutes further up Via San Giovanni"},{"time":"2:30pm","name":"Piazza della Cisterna","coords":[43.4674,11.0428],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Cisterna+San+Gimignano","desc":"The triangular heart of town, named for its 13th-century well, ringed by medieval tower-houses. Home to Gelateria Dondoli, twice crowned world gelato champion — officially recognized as among the best in Italy.","ticket":null,"warning":null,"gettingHere":"A couple minutes further up Via San Giovanni"},{"time":"2:50pm","name":"Piazza del Duomo","coords":[43.4677861,11.0431444],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Duomo+San+Gimignano","desc":"The civic and religious center of town — Duomo, Palazzo Comunale, and the twin Salvucci towers all face this square.","ticket":null,"warning":null,"gettingHere":"A few steps north"},{"time":"2:55pm","name":"Duomo di San Gimignano (Collegiata)","coords":[43.4677861,11.0431444],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Duomo+di+San+Gimignano","desc":"Formally a collegiate church, not a true cathedral, since San Gimignano never had its own bishop — but colloquially always called 'the Duomo.' The walls are entirely covered in fresco cycles, including a dramatic Last Judgment. Modest dress required.","ticket":"🎟️ ~€5","warning":null,"gettingHere":"Right on Piazza del Duomo"},{"time":"3:25pm","name":"Torre Grossa","coords":[43.4676278,11.0429028],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Torre+Grossa+San+Gimignano","desc":"The tallest tower in town at 54m, 218 steps — viewing from the base only, not climbing today.","ticket":null,"warning":null,"gettingHere":"Same piazza, part of the Palazzo Comunale"},{"time":"3:30pm","name":"Via San Matteo","coords":[43.4691,11.0428],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+San+Matteo+San+Gimignano","desc":"Continuing north — quieter than Via San Giovanni, lined with old workshops and tower bases.","ticket":null,"warning":null,"gettingHere":"A couple minutes from Torre Grossa"},{"time":"3:45pm","name":"Church of Sant'Agostino","coords":[43.4699,11.0429],"cantMiss":false,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Church+of+Sant%27Agostino+San+Gimignano","desc":"Optional, only if energy allows — a Benozzo Gozzoli fresco cycle telling the life of St. Augustine.","ticket":"🚪 Free","warning":null,"gettingHere":"~15 min walk up Via San Matteo"},{"time":"4:15pm","name":"Porta San Matteo","coords":[43.4703,11.0426],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+San+Matteo+San+Gimignano","desc":"The north gate — end of the walk through town.","ticket":null,"warning":null,"gettingHere":"Driver pickup here"},{"time":"~5:00pm","name":"Return to Hotel Davanzati","type":"transport","desc":"End of the driver day."}]
+    stops: [{"section":"SIENA"},{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"9:00am","name":"Pickup at Hotel Davanzati","type":"transport","desc":"Truescany driver.","gettingHere":"Right at the hotel, after breakfast"},{"time":"~10:15am","name":"Piazza del Campo","coords":[43.318333,11.331389],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Campo+Siena","desc":"The shell-shaped main square, one of the great medieval piazzas in Europe, sloping down toward the Palazzo Pubblico like an amphitheater. Twice a year (July 2 and August 16) it becomes the track for the Palio, a bareback horse race between Siena's 17 historic contrade (districts) that dates to the Middle Ages.","ticket":null,"warning":null,"gettingHere":"Driver drops you directly here, ~1h15 drive from Florence"},{"time":"10:35am","name":"Palazzo Pubblico","coords":[43.31833,11.33139],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Palazzo+Pubblico+Siena","desc":"Siena's Gothic town hall, completed in 1310 — courtyard only today, not visiting the Museo Civico interior, which holds Lorenzetti's famous 'Allegory of Good and Bad Government' frescoes.","ticket":null,"warning":null,"gettingHere":"~1 min walk, right on the Campo"},{"time":"10:45am","name":"Torre del Mangia","coords":[43.3182111,11.3322528],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Torre+del+Mangia+Siena","desc":"Siena's 88-meter bell tower, viewing from the base only — not climbing today.","ticket":null,"warning":null,"gettingHere":"~1 min walk, rises directly from Palazzo Pubblico"},{"time":"10:50am","name":"Via di Città → Via del Capitano","coords":[43.2975,11.33],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+di+Citta+Siena","desc":"Lined with medieval palazzi — the connecting walk between the Campo and the Duomo.","ticket":null,"warning":null,"gettingHere":"~5 min walk, the direct route from the Campo up to the Duomo"},{"time":"11:00am","name":"Siena Cathedral (Duomo)","coords":[43.317185,11.328823],"cantMiss":true,"duration":"45 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Siena+Cathedral+Duomo","desc":"Consecrated in 1215, one of the great Gothic cathedrals of Italy — striped black-and-white marble inside and out (the colors of Siena's mythical founders' horse), an extraordinary inlaid marble floor with 56 panels made over two centuries, and the vividly frescoed Piccolomini Library. A planned 14th-century expansion to make it the largest church in the world was abandoned after the Black Death — you can still see the unfinished nave walls today.","ticket":"🎟️ OPA SI Pass","warning":null,"gettingHere":"~1 min walk, at the top of Via del Capitano"},{"time":"11:45am","name":"Battistero di San Giovanni","coords":[43.3028,11.3297],"cantMiss":false,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Giovanni+Siena","desc":"Tucked beneath the Duomo's apse — because Siena's cathedral sits on a slope, the Baptistery was built as a supporting structure one level down, reached by its own staircase into a small piazza. Jacopo della Quercia's bronze baptismal font inside has panels by Donatello and Ghiberti.","ticket":"🎟️ Same pass","warning":null,"gettingHere":"~2 min walk down the staircase from the Duomo's apse, into Piazza San Giovanni"},{"time":"12:00pm","name":"Facciatone climb","coords":[43.3033,11.3291],"cantMiss":true,"duration":"20 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Facciatone+Siena","desc":"The unfinished wall of that abandoned 'New Cathedral' expansion, now a viewing platform. A gentler climb than Torre del Mangia — two levels, the lower looking over the rooftops toward the Campo, the upper opening to a full panorama of the walled city and countryside.","ticket":"🎟️ Same pass","warning":null,"gettingHere":"~2 min walk back up from the Baptistery, at the Duomo level"},{"section":"SAN GIMIGNANO"},{"time":"~1:30pm","name":"Porta San Giovanni","coords":[43.4672,11.0431],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+San+Giovanni+San+Gimignano","desc":"The medieval south gate — main entry point into the walled town.","ticket":null,"warning":null,"gettingHere":"Driver drop-off here, ~40 min from Siena"},{"time":"1:35pm","name":"Via San Giovanni","coords":[43.4678,11.0432],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+San+Giovanni+San+Gimignano","desc":"The main street climbing from the gate toward the town center.","ticket":null,"warning":null,"gettingHere":"~1 min walk, begins right at Porta San Giovanni"},{"time":"1:45pm","name":"Lunch — San Gimignano","type":"meal","coords":[43.468,11.0433],"cantMiss":false,"duration":"45 min","access":"outside","mapLink":null,"desc":"TBD — plenty of options along Via San Giovanni and around Piazza della Cisterna.","ticket":"TBD","warning":null,"gettingHere":"~3 min walk further up Via San Giovanni"},{"time":"2:30pm","name":"Piazza della Cisterna","coords":[43.4674,11.0428],"cantMiss":true,"duration":"20 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+della+Cisterna+San+Gimignano","desc":"The triangular heart of town, named for its 13th-century well, ringed by medieval tower-houses. Home to Gelateria Dondoli, twice crowned world gelato champion — officially recognized as among the best in Italy.","ticket":null,"warning":null,"gettingHere":"~3 min walk further up Via San Giovanni"},{"time":"2:50pm","name":"Piazza del Duomo","coords":[43.4677861,11.0431444],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Duomo+San+Gimignano","desc":"The civic and religious center of town — Duomo, Palazzo Comunale, and the twin Salvucci towers all face this square.","ticket":null,"warning":null,"gettingHere":"~1 min walk, a few steps north"},{"time":"2:55pm","name":"Duomo di San Gimignano (Collegiata)","coords":[43.4677861,11.0431444],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Duomo+di+San+Gimignano","desc":"Formally a collegiate church, not a true cathedral, since San Gimignano never had its own bishop — but colloquially always called 'the Duomo.' The walls are entirely covered in fresco cycles, including a dramatic Last Judgment. Modest dress required.","ticket":"🎟️ ~€5","warning":null,"gettingHere":"~1 min walk, right on Piazza del Duomo"},{"time":"3:25pm","name":"Torre Grossa","coords":[43.4676278,11.0429028],"cantMiss":false,"duration":"5 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Torre+Grossa+San+Gimignano","desc":"The tallest tower in town at 54m, 218 steps — viewing from the base only, not climbing today.","ticket":null,"warning":null,"gettingHere":"~1 min walk, same piazza, part of the Palazzo Comunale"},{"time":"3:30pm","name":"Via San Matteo","coords":[43.4691,11.0428],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+San+Matteo+San+Gimignano","desc":"Continuing north — quieter than Via San Giovanni, lined with old workshops and tower bases.","ticket":null,"warning":null,"gettingHere":"~3 min walk from Torre Grossa"},{"time":"3:45pm","name":"Church of Sant'Agostino","coords":[43.4699,11.0429],"cantMiss":false,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Church+of+Sant%27Agostino+San+Gimignano","desc":"Optional, only if energy allows — a Benozzo Gozzoli fresco cycle telling the life of St. Augustine.","ticket":"🚪 Free","warning":null,"gettingHere":"~15 min walk up Via San Matteo"},{"time":"4:15pm","name":"Porta San Matteo","coords":[43.4703,11.0426],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+San+Matteo+San+Gimignano","desc":"The north gate — end of the walk through town.","ticket":null,"warning":null,"gettingHere":"Driver pickup here — end of the driver day"},{"time":"~5:00pm","name":"Return to Hotel Davanzati","type":"transport","desc":"End of the driver day.","gettingHere":"Driver drops you back at the hotel"},{"time":"Evening","name":"Dinner — near the hotel","type":"meal","desc":"TBD, near the hotel.","gettingHere": "Right at the hotel or a short walk out"}]
   },
   { date: new Date(2027,5,13), block: "florence", title: "Val d'Orcia: Pienza & Montepulciano — Private Driver", sub: "Val d'Orcia: Pienza & Montepulciano — Private Driver",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -610,7 +621,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/43.06557558660052,11.612752302009957/43.07260187939838,11.64725710627834/Piazza+Pio+II+Pienza/Porta+al+Prato+Montepulciano/Piazza+Grande+Montepulciano/",
     townRoutes: [{"label":"Pienza only (walking)","url":"https://www.google.com/maps/dir/Piazza+Pio+II+Pienza/Corso+Il+Rossellino+Pienza/Via+del+Casello+Pienza/"},{"label":"Montepulciano only (walking)","url":"https://www.google.com/maps/dir/Porta+al+Prato+Montepulciano/Via+di+Gracciano+nel+Corso+Montepulciano/Chiesa+di+Sant%27Agostino+Montepulciano/Piazza+San+Francesco+Montepulciano/Piazza+Grande+Montepulciano/Duomo+di+Montepulciano/Porta+al+Prato+Montepulciano/"}],
     driverToday: true,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"8:00am","name":"Pickup at Hotel Davanzati","type":"transport","desc":"Truescany driver."},{"time":"~9:20am","name":"Gladiator viewpoint","coords":[43.06557558660052,11.612752302009957],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.06557558660052,11.612752302009957","desc":"The countryside road made famous in Ridley Scott's 'Gladiator' (2000) — golden fields and a single cypress-lined dirt track, the classic Val d'Orcia postcard view.","ticket":null,"warning":null,"gettingHere":"~1h20 drive from Florence"},{"time":"9:35am","name":"End of the Strada dei Gladiatori","coords":[43.06971878414619,11.614509085639733],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.06971878414619,11.614509085639733","desc":"The far end of the same dirt road.","ticket":null,"warning":null,"gettingHere":"A short walk further down the same dirt road"},{"time":"9:50am","name":"Cappella della Madonna di Vitaleta","coords":[43.07260187939838,11.64725710627834],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=43.07260187939838,11.64725710627834","desc":"A tiny chapel framed by four cypress trees, one of the most photographed spots in all of Tuscany — the image that appears on countless Val d'Orcia postcards and calendars.","ticket":null,"warning":"Open only during the hours of the adjoining Ristoro Vitaleta — confirm on the day","gettingHere":"A few minutes' drive to the chapel"},{"time":"10:15am","name":"Gladiator Homecoming Scene","coords":[43.0751152388538,11.668135811784811],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.0751152388538,11.668135811784811","desc":"A second filming location a short drive away, used for the film's homecoming sequence.","ticket":null,"warning":null,"gettingHere":"A short drive away"},{"time":"~12:30pm","name":"Lunch — Agriturismo","coords":[43.075,11.64],"cantMiss":true,"duration":"90 min","access":"outside","mapLink":null,"desc":"A relaxed Tuscan meal at a family-run farm, with Pecorino di Pienza tasting straight from the source and views over the valley, wine included for the adults.","ticket":"Included in the €1,260 Sunday driver package","warning":"Exact location pending confirmation from Truescany","gettingHere":"A short drive to the farm"},{"section":"PIENZA"},{"time":"~2:15pm","name":"Piazza Pio II & Duomo","coords":[43.07639,11.67861],"cantMiss":true,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Pio+II+Pienza","desc":"The centerpiece of Pope Pius II's 1459 'ideal city' — he tore down his family's medieval houses and had architect Bernardo Rossellino rebuild the town center in just three years, creating the first fully planned Renaissance urban space in Italy. The Cathedral of Santa Maria Assunta is free to enter.","ticket":"🚪 Free","warning":null,"gettingHere":"~15 min drive from the agriturismo"},{"time":"2:35pm","name":"Corso Il Rossellino","coords":[43.0779,11.6785],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Corso+Il+Rossellino+Pienza","desc":"Pienza's main street, named for its architect, lined with pecorino cheese shops — the town is the acknowledged origin of Pecorino di Pienza.","ticket":null,"warning":null,"gettingHere":"Right off Piazza Pio II"},{"time":"2:45pm","name":"Via del Casello (the Belvedere)","coords":[43.0774,11.6781],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+del+Casello+Pienza","desc":"Pienza's real panoramic viewpoint, a walkway along the old walls looking south over the Val d'Orcia toward Monte Amiata. Walk back through Via dell'Amore, a short connecting alley, not a destination in itself.","ticket":null,"warning":null,"gettingHere":"A few minutes down Corso Il Rossellino, near Porta al Ciglio"},{"section":"MONTEPULCIANO"},{"time":"~3:30pm","name":"Porta al Prato","coords":[43.0925,11.7844],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+al+Prato+Montepulciano","desc":"The town's main gate, at the base of a roughly 1km climb to the top.","ticket":null,"warning":null,"gettingHere":"Driver drop-off and pickup, same gate, ~30 min from Pienza"},{"time":"3:35pm","name":"Via di Gracciano nel Corso","coords":[43.094,11.7855],"cantMiss":false,"duration":"20 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+di+Gracciano+nel+Corso+Montepulciano","desc":"The main corso climbing uphill, changing names several times along the way. Look for the Marzocco Column (Florence's heraldic lion, marking 16th-century Medici rule over the town), Palazzo Bucelli with ancient Etruscan and Roman inscriptions embedded in its base, and the Torre di Pulcinella, a clock tower with a jester figure that strikes the hours.","ticket":null,"warning":null,"gettingHere":"Begins right at Porta al Prato"},{"time":"3:55pm","name":"Chiesa di Sant'Agostino","coords":[43.095,11.7867],"cantMiss":false,"duration":"10 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Chiesa+di+Sant%27Agostino+Montepulciano","desc":"A small church along the climb, facade attributed to Michelozzo.","ticket":null,"warning":null,"gettingHere":"A few minutes up the corso"},{"time":"4:10pm","name":"Piazza San Francesco","coords":[43.0958,11.787],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Francesco+Montepulciano","desc":"A rest stop partway up the climb — genuinely panoramic views over the countryside.","ticket":null,"warning":null,"gettingHere":"A few minutes further up the climb"},{"time":"4:25pm","name":"Piazza Grande","coords":[43.0967,11.7876],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Grande+Montepulciano","desc":"The top of the town, 605m above sea level — the Duomo and the crenellated Palazzo Comunale, deliberately modeled on Florence's Palazzo Vecchio to assert Florentine-aligned civic identity after Montepulciano's long struggle between Florence and Siena for control of the town.","ticket":null,"warning":null,"gettingHere":"A few minutes further up, at the top of the town"},{"time":"4:40pm","name":"Duomo di Montepulciano & Pozzo dei Grifi e dei Leoni","coords":[43.0966,11.7877],"cantMiss":false,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Duomo+di+Montepulciano","desc":"An intentionally unfinished, raw stone facade conceals a polished Renaissance interior with Taddeo di Bartolo's altarpiece. The old wishing well opposite, topped with griffins and lions, gives the piazza its full name.","ticket":null,"warning":null,"gettingHere":"Right on Piazza Grande"},{"time":"5:00pm","name":"Return directly to Porta al Prato","coords":[43.0925,11.7844],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":null,"desc":"No further stops on the way down — straight back to the gate.","ticket":null,"warning":null,"gettingHere":"From Piazza Grande, straight back down — no further stops"},{"time":"~6:00pm","name":"Return to Hotel Davanzati","type":"transport","desc":"End of the driver day."}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"8:00am","name":"Pickup at Hotel Davanzati","type":"transport","desc":"Truescany driver.","gettingHere":"Right at the hotel, after breakfast"},{"time":"~9:20am","name":"Gladiator viewpoint","coords":[43.06557558660052,11.612752302009957],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.06557558660052,11.612752302009957","desc":"The countryside road made famous in Ridley Scott's 'Gladiator' (2000) — golden fields and a single cypress-lined dirt track, the classic Val d'Orcia postcard view.","ticket":null,"warning":null,"gettingHere":"~1h20 drive from Florence"},{"time":"9:35am","name":"End of the Strada dei Gladiatori","coords":[43.06971878414619,11.614509085639733],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.06971878414619,11.614509085639733","desc":"The far end of the same dirt road.","ticket":null,"warning":null,"gettingHere":"~4 min walk further down the same dirt road"},{"time":"9:50am","name":"Cappella della Madonna di Vitaleta","coords":[43.07260187939838,11.64725710627834],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=43.07260187939838,11.64725710627834","desc":"A tiny chapel framed by four cypress trees, one of the most photographed spots in all of Tuscany — the image that appears on countless Val d'Orcia postcards and calendars.","ticket":null,"warning":"Open only during the hours of the adjoining Ristoro Vitaleta — confirm on the day","gettingHere":"~5 min drive to the chapel"},{"time":"10:15am","name":"Gladiator Homecoming Scene","coords":[43.0751152388538,11.668135811784811],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=43.0751152388538,11.668135811784811","desc":"A second filming location a short drive away, used for the film's homecoming sequence.","ticket":null,"warning":null,"gettingHere":"~5 min drive away"},{"time":"~12:30pm","name":"Lunch — Agriturismo","type":"meal","coords":[43.075,11.64],"cantMiss":true,"duration":"90 min","access":"outside","mapLink":null,"desc":"A relaxed Tuscan meal at a family-run farm, with Pecorino di Pienza tasting straight from the source and views over the valley, wine included for the adults.","ticket":"Included in the €1,260 Sunday driver package","warning":"Exact location pending confirmation from Truescany","gettingHere":"~10 min drive to the farm"},{"section":"PIENZA"},{"time":"~2:15pm","name":"Piazza Pio II & Duomo","coords":[43.07639,11.67861],"cantMiss":true,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Pio+II+Pienza","desc":"The centerpiece of Pope Pius II's 1459 'ideal city' — he tore down his family's medieval houses and had architect Bernardo Rossellino rebuild the town center in just three years, creating the first fully planned Renaissance urban space in Italy. The Cathedral of Santa Maria Assunta is free to enter.","ticket":"🚪 Free","warning":null,"gettingHere":"~15 min drive from the agriturismo"},{"time":"2:35pm","name":"Corso Il Rossellino","coords":[43.0779,11.6785],"cantMiss":false,"duration":"10 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Corso+Il+Rossellino+Pienza","desc":"Pienza's main street, named for its architect, lined with pecorino cheese shops — the town is the acknowledged origin of Pecorino di Pienza.","ticket":null,"warning":null,"gettingHere":"~1 min walk, right off Piazza Pio II"},{"time":"2:45pm","name":"Via del Casello (the Belvedere)","coords":[43.0774,11.6781],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+del+Casello+Pienza","desc":"Pienza's real panoramic viewpoint, a walkway along the old walls looking south over the Val d'Orcia toward Monte Amiata. Walk back through Via dell'Amore, a short connecting alley, not a destination in itself.","ticket":null,"warning":null,"gettingHere":"~4 min walk down Corso Il Rossellino, near Porta al Ciglio"},{"section":"MONTEPULCIANO"},{"time":"~3:30pm","name":"Porta al Prato","coords":[43.0925,11.7844],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porta+al+Prato+Montepulciano","desc":"The town's main gate, at the base of a roughly 1km climb to the top.","ticket":null,"warning":null,"gettingHere":"Driver drop-off and pickup, same gate, ~30 min from Pienza"},{"time":"3:35pm","name":"Via di Gracciano nel Corso","coords":[43.094,11.7855],"cantMiss":false,"duration":"20 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+di+Gracciano+nel+Corso+Montepulciano","desc":"The main corso climbing uphill, changing names several times along the way. Look for the Marzocco Column (Florence's heraldic lion, marking 16th-century Medici rule over the town), Palazzo Bucelli with ancient Etruscan and Roman inscriptions embedded in its base, and the Torre di Pulcinella, a clock tower with a jester figure that strikes the hours.","ticket":null,"warning":null,"gettingHere":"~1 min walk, begins right at Porta al Prato"},{"time":"3:55pm","name":"Chiesa di Sant'Agostino","coords":[43.095,11.7867],"cantMiss":false,"duration":"10 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Chiesa+di+Sant%27Agostino+Montepulciano","desc":"A small church along the climb, facade attributed to Michelozzo.","ticket":null,"warning":null,"gettingHere":"~4 min walk up the corso"},{"time":"4:10pm","name":"Piazza San Francesco","coords":[43.0958,11.787],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+San+Francesco+Montepulciano","desc":"A rest stop partway up the climb — genuinely panoramic views over the countryside.","ticket":null,"warning":null,"gettingHere":"~4 min walk further up the climb"},{"time":"4:25pm","name":"Piazza Grande","coords":[43.0967,11.7876],"cantMiss":true,"duration":"15 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+Grande+Montepulciano","desc":"The top of the town, 605m above sea level — the Duomo and the crenellated Palazzo Comunale, deliberately modeled on Florence's Palazzo Vecchio to assert Florentine-aligned civic identity after Montepulciano's long struggle between Florence and Siena for control of the town.","ticket":null,"warning":null,"gettingHere":"~4 min walk further up, at the top of the town"},{"time":"4:40pm","name":"Duomo di Montepulciano & Pozzo dei Grifi e dei Leoni","coords":[43.0966,11.7877],"cantMiss":false,"duration":"20 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Duomo+di+Montepulciano","desc":"An intentionally unfinished, raw stone facade conceals a polished Renaissance interior with Taddeo di Bartolo's altarpiece. The old wishing well opposite, topped with griffins and lions, gives the piazza its full name.","ticket":null,"warning":null,"gettingHere":"~1 min walk, right on Piazza Grande"},{"time":"5:00pm","name":"Return directly to Porta al Prato","coords":[43.0925,11.7844],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":null,"desc":"No further stops on the way down — straight back to the gate.","ticket":null,"warning":null,"gettingHere":"~15 min walk straight back down from Piazza Grande — no further stops"},{"time":"~6:00pm","name":"Return to Hotel Davanzati","type":"transport","desc":"End of the driver day.","gettingHere":"Driver drops you back at the hotel"},{"time":"Evening","name":"Dinner — near the hotel","type":"meal","desc":"TBD, near the hotel.","gettingHere":"Right at the hotel or a short walk out"}]
   },
   { date: new Date(2027,5,14), block: "florence", title: "Ravenna & Porto Corsini — Embarkation Day", sub: "Ravenna & Porto Corsini — Embarkation Day",
     hotelPin: {"lat":43.7699,"lng":11.2536,"name":"Hotel Davanzati"},
@@ -619,7 +630,7 @@ const days = [
     routeUrl: "https://www.google.com/maps/dir/Hotel+Davanzati+Via+Porta+Rossa+5+Florence/Basilica+di+San+Vitale+Ravenna/Dante%27s+Tomb+Ravenna/Basilica+di+Sant%27Apollinare+Nuovo+Ravenna/Porto+Corsini+Cruise+Terminal/",
     townRoutes: [{"label":"Ravenna only (walking)","url":"https://www.google.com/maps/dir/Basilica+di+San+Vitale+Ravenna/Mausoleum+of+Galla+Placidia+Ravenna/Via+Cavour+Ravenna/Piazza+del+Popolo+Ravenna/Dante%27s+Tomb+Ravenna/Basilica+di+Sant%27Apollinare+Nuovo+Ravenna/"}],
     driverToday: true,
-    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"7:00am","name":"Pickup at Hotel Davanzati, with luggage","type":"transport","desc":"Truescany driver."},{"section":"RAVENNA"},{"time":"9:15am","name":"Basilica di San Vitale","coords":[44.4177,12.1997],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+San+Vitale+Ravenna","desc":"Consecrated in 547 AD under Byzantine emperor Justinian I, an octagonal church whose apse holds the most celebrated Byzantine mosaics outside Istanbul — golden panels of Justinian and Empress Theodora, each with their full court, facing each other across the altar. Dante is thought to have seen these mosaics himself while living in Ravenna, and some scholars believe they influenced his descriptions of paradise in the Divine Comedy.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver drop-off, ~2h drive from Florence"},{"time":"9:45am","name":"Mausoleum of Galla Placidia","timeSensitive":true,"coords":[44.4176,12.1998],"cantMiss":true,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Mausoleum+of+Galla+Placidia+Ravenna","desc":"A small, unassuming brick exterior hides one of the most atmospheric interiors in Italy — a dark chamber under a deep blue ceiling scattered with gold stars, built around 430 AD as a chapel, though Galla Placidia (daughter, sister, wife, and mother of four different Roman emperors) is not actually buried here.","ticket":"🎟️ Timed-entry — mandatory, sells out weeks ahead in peak season","warning":null,"gettingHere":"Right next to San Vitale"},{"time":"10:00am","name":"Via Cavour","coords":[44.4172,12.2013],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Cavour+Ravenna","desc":"An elegant central street leading toward Piazza del Popolo.","ticket":null,"warning":null,"gettingHere":"The main route out of the San Vitale complex"},{"time":"10:15am","name":"Piazza del Popolo","coords":[44.4161,12.2025],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Popolo+Ravenna","desc":"Ravenna's main square, roughly midway on the walk to Sant'Apollinare Nuovo.","ticket":null,"warning":null,"gettingHere":"A few minutes further along Via Cavour"},{"time":"10:30am","name":"Dante's Tomb","coords":[44.4156,12.2013],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Dante%27s+Tomb+Ravenna","desc":"Dante Alighieri, exiled from his native Florence for political reasons, died in Ravenna in 1321 and is buried here. Florence has spent centuries trying to get his remains back — a neoclassical tomb was even built for him in Santa Croce in 1829, and it remains empty to this day. Ravenna has consistently refused to return him.","ticket":"🚪 Free","warning":null,"gettingHere":"A couple minutes from Piazza del Popolo"},{"time":"10:55am","name":"Basilica di Sant'Apollinare Nuovo","coords":[44.4133,12.2036],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Sant%27Apollinare+Nuovo+Ravenna","desc":"Built by the Ostrogothic King Theodoric around 500 AD, originally for Arian Christian worship before being reconsecrated to Catholic use. Two long mosaic processions line the nave — 22 female saints and 26 male saints and martyrs — marching from the old port city of Classe and from Theodoric's palace toward Christ and the Madonna.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver meets you here after the walk"},{"time":"1:30pm","name":"Porto Corsini Cruise Terminal","timeSensitive":true,"type":"transport","coords":[44.4914,12.2789],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porto+Corsini+Cruise+Terminal","desc":"","ticket":null,"warning":"Must be on board by 2:00pm — ship departs 5:00pm","gettingHere":"Driver picks you up here for the transfer to the port"}]
+    stops: [{"time":"Breakfast","name":"Breakfast — Hotel Davanzati (early)","type":"meal","desc":"Included."},{"time":"7:00am","name":"Pickup at Hotel Davanzati, with luggage","type":"transport","desc":"Truescany driver.","gettingHere":"Right at the hotel, after breakfast, bags packed"},{"section":"RAVENNA"},{"time":"9:15am","name":"Basilica di San Vitale","coords":[44.4177,12.1997],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+San+Vitale+Ravenna","desc":"Consecrated in 547 AD under Byzantine emperor Justinian I, an octagonal church whose apse holds the most celebrated Byzantine mosaics outside Istanbul — golden panels of Justinian and Empress Theodora, each with their full court, facing each other across the altar. Dante is thought to have seen these mosaics himself while living in Ravenna, and some scholars believe they influenced his descriptions of paradise in the Divine Comedy.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"Driver drop-off, ~2h drive from Florence"},{"time":"9:45am","name":"Mausoleum of Galla Placidia","timeSensitive":true,"coords":[44.4176,12.1998],"cantMiss":true,"duration":"15 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Mausoleum+of+Galla+Placidia+Ravenna","desc":"A small, unassuming brick exterior hides one of the most atmospheric interiors in Italy — a dark chamber under a deep blue ceiling scattered with gold stars, built around 430 AD as a chapel, though Galla Placidia (daughter, sister, wife, and mother of four different Roman emperors) is not actually buried here.","ticket":"🎟️ Timed-entry — mandatory, sells out weeks ahead in peak season","warning":null,"gettingHere":"~1 min walk, right next to San Vitale"},{"time":"10:00am","name":"Via Cavour","coords":[44.4172,12.2013],"cantMiss":false,"duration":"15 min walk","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Via+Cavour+Ravenna","desc":"An elegant central street leading toward Piazza del Popolo.","ticket":null,"warning":null,"gettingHere":"~4 min walk, the main route out of the San Vitale complex"},{"time":"10:15am","name":"Piazza del Popolo","coords":[44.4161,12.2025],"cantMiss":false,"duration":"10 min","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Piazza+del+Popolo+Ravenna","desc":"Ravenna's main square, roughly midway on the walk to Sant'Apollinare Nuovo.","ticket":null,"warning":null,"gettingHere":"~4 min walk further along Via Cavour"},{"time":"10:30am","name":"Dante's Tomb","coords":[44.4156,12.2013],"cantMiss":true,"duration":"15 min","access":"free","mapLink":"https://www.google.com/maps/search/?api=1&query=Dante%27s+Tomb+Ravenna","desc":"Dante Alighieri, exiled from his native Florence for political reasons, died in Ravenna in 1321 and is buried here. Florence has spent centuries trying to get his remains back — a neoclassical tomb was even built for him in Santa Croce in 1829, and it remains empty to this day. Ravenna has consistently refused to return him.","ticket":"🚪 Free","warning":null,"gettingHere":"~3 min walk from Piazza del Popolo"},{"time":"10:55am","name":"Basilica di Sant'Apollinare Nuovo","coords":[44.4133,12.2036],"cantMiss":true,"duration":"30 min","access":"ticketed","mapLink":"https://www.google.com/maps/search/?api=1&query=Basilica+di+Sant%27Apollinare+Nuovo+Ravenna","desc":"Built by the Ostrogothic King Theodoric around 500 AD, originally for Arian Christian worship before being reconsecrated to Catholic use. Two long mosaic processions line the nave — 22 female saints and 26 male saints and martyrs — marching from the old port city of Classe and from Theodoric's palace toward Christ and the Madonna.","ticket":"🎟️ Combined Ravenna pass","warning":null,"gettingHere":"~4 min walk from Dante's Tomb — driver meets you here"},{"time":"1:30pm","name":"Porto Corsini Cruise Terminal","critical":true,"timeSensitive":true,"type":"transport","coords":[44.4914,12.2789],"cantMiss":false,"duration":"—","access":"outside","mapLink":"https://www.google.com/maps/search/?api=1&query=Porto+Corsini+Cruise+Terminal","desc":"","ticket":null,"warning":"Must be on board by 2:00pm — ship departs 5:00pm","gettingHere":"Driver picks you up here for the ~15 min transfer to the port"},{"time":"~2:30pm","name":"Lunch — onboard","type":"meal","desc":"Once aboard, lunch service is available.","gettingHere": "You're on the ship"},{"time":"Evening","name":"Dinner — onboard","type":"meal","desc":"First night of the cruise, main dining room.","gettingHere": "You're back on the ship for the evening"}]
   },
   { date: new Date(2027,5,15), block: "cruise", title: "Split, Croatia", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":43.5081,"lng":16.4402,"name":"Split"}],
@@ -627,7 +638,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — Split", type: "meal", desc: "TBD, Split" , "gettingHere": "TBD, depending on the day's shore plan"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,16), block: "cruise", title: "Dubrovnik, Croatia", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":42.6407,"lng":18.1077,"name":"Dubrovnik"}],
@@ -635,7 +650,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — Dubrovnik", type: "meal", desc: "TBD, Dubrovnik" , "gettingHere": "TBD, depending on the day's shore plan"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,17), block: "cruise", title: "Kotor, Montenegro", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":42.4247,"lng":18.7712,"name":"Kotor"}],
@@ -643,7 +662,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — Kotor", type: "meal", desc: "TBD, Kotor" , "gettingHere": "TBD, depending on the day's shore plan"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,18), block: "cruise", title: "At sea", sub: "Planning not started for this day yet.",
     cityPins: [],
@@ -651,7 +674,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — onboard", type: "meal", desc: "Included." , "gettingHere": "You're on the ship"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,19), block: "cruise", title: "Messina → Taormina, Sicily", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":37.8516,"lng":15.2853,"name":"Taormina"}],
@@ -659,7 +686,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — Taormina", type: "meal", desc: "TBD, Taormina" , "gettingHere": "TBD, depending on the day's shore plan"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,20), block: "cruise", title: "Amalfi Coast — Salerno", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":40.634,"lng":14.6027,"name":"Amalfi"}],
@@ -667,7 +698,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — Amalfi Coast", type: "meal", desc: "TBD, Amalfi Coast" , "gettingHere": "TBD, depending on the day's shore plan"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,21), block: "cruise", title: "At sea — Luis Jr.'s birthday! 🎂", sub: "Planning not started for this day yet.",
     cityPins: [],
@@ -675,7 +710,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — onboard", type: "meal", desc: "Included." , "gettingHere": "You're on the ship"},
+      { time: "Dinner", name: "Dinner — onboard — Luis Jr.'s birthday!", type: "meal", desc: "Included. Ask about a birthday treat in the dining room." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,22), block: "cruise", title: "Portofino", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":44.3028,"lng":9.2097,"name":"Portofino"}],
@@ -683,7 +722,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Included." },
+      { time: "Lunch", name: "Lunch — Portofino", type: "meal", desc: "TBD, Portofino" , "gettingHere": "TBD, depending on the day's shore plan"},
+      { time: "Dinner", name: "Dinner — onboard", type: "meal", desc: "Included." , "gettingHere": "You're back on the ship for the evening"},
+    ]
   },
   { date: new Date(2027,5,23), block: "cruise", title: "Livorno — Cinque Terre: Vernazza, Manarola & Riomaggiore",
     sub: "Ship stays overnight in Livorno — no cruise-day time pressure today.",
@@ -698,20 +741,20 @@ const days = [
     driverToday: false,
     stops: [
       { time: "6:45am", name: "Breakfast — onboard", type: "meal", desc: "Early breakfast before heading ashore." },
-      { time: "7:30am", name: "Taxi to Livorno Centrale", type: "transport", coords: [43.5557,10.3026], gettingHere: "Walk off the ship, 7:15-7:30am", desc: "Taxi from the ship or cruise terminal to Livorno Centrale station, ~15-20 min." },
-      { time: "8:10am", name: "Train to Vernazza", type: "transport", coords: [43.55417,10.33583], gettingHere: "At Livorno Centrale", desc: "The exact June 2027 schedule isn't published yet — target the fastest itinerary departing Livorno ~8:00-8:30am. Current timetables reach Vernazza in about 1h33, typically with one change at La Spezia.", warning: "Book this once the June 2027 timetable is released; plan on a change at La Spezia even if a seasonal direct option appears later." },
+      { time: "7:30am", name: "Taxi to Livorno Centrale", type: "transport", coords: [43.5557,10.3026], gettingHere: "Walk off the ship, 7:15-7:30am, then ~15-20 min taxi to the station", desc: "Taxi from the ship or cruise terminal to Livorno Centrale station, ~15-20 min." },
+      { time: "8:10am", name: "Train to Vernazza", type: "transport", coords: [43.55417,10.33583], gettingHere: "At Livorno Centrale station, board the train", desc: "The exact June 2027 schedule isn't published yet — target the fastest itinerary departing Livorno ~8:00-8:30am. Current timetables reach Vernazza in about 1h33, typically with one change at La Spezia.", warning: "Book this once the June 2027 timetable is released; plan on a change at La Spezia even if a seasonal direct option appears later.", ticket: "Compare the Cinque Terre Card (unlimited regional travel between La Spezia and Levanto) against individual point-to-point tickets once 2027 pricing is out — the Livorno-to-Vernazza legs are separate either way." },
       { section: "VERNAZZA" },
-      { time: "10:00am", name: "Vernazza — Piazza Marconi & the harbor", cantMiss: true, duration: "~2 hrs", access: "outside", coords: [44.1355,9.6835], gettingHere: "Arrive ~9:45-10:00am; walk down Via Roma from the station to the harbor", desc: "The most photogenic of the five villages — a tiny natural harbor ringed by tall pastel houses, dominated by the Church of Santa Margherita di Antiochia right on the water. Walk down Via Roma to Piazza Marconi, around the small harbor and beach, then partway up toward the elevated viewpoint for the classic postcard shot back over the village. Two hours is enough — Vernazza is compact, and you'll be here before the afternoon crowds peak.", tip: "Save lunch for Manarola — coffee or gelato here is enough.", mapLink: "https://www.google.com/maps/search/?api=1&query=Piazza+Marconi+Vernazza" },
+      { time: "10:00am", name: "Vernazza — Piazza Marconi & the harbor", cantMiss: true, duration: "~2 hrs", access: "outside", coords: [44.1355,9.6835], gettingHere: "Train arrives ~9:45-10:00am; ~5 min walk down Via Roma from the station to the harbor", desc: "The most photogenic of the five villages — a tiny natural harbor ringed by tall pastel houses, dominated by the Church of Santa Margherita di Antiochia right on the water. Walk down Via Roma to Piazza Marconi, around the small harbor and beach, then partway up toward the elevated viewpoint for the classic postcard shot back over the village. Two hours is enough — Vernazza is compact, and you'll be here before the afternoon crowds peak.", tip: "Save lunch for Manarola — coffee or gelato here is enough.", mapLink: "https://www.google.com/maps/search/?api=1&query=Piazza+Marconi+Vernazza" },
       { section: "MANAROLA" },
-      { time: "~12:00pm", name: "Train to Manarola", type: "transport", coords: [44.1049,9.72922], gettingHere: "Back to Vernazza station", desc: "Local Cinque Terre trains are frequent and take only a few minutes between villages — Vernazza to Manarola is normally about 6-8 minutes." },
+      { time: "~12:00pm", name: "Train to Manarola", type: "transport", coords: [44.1049,9.72922], gettingHere: "~5 min walk back to Vernazza station, then a ~6-8 min train", desc: "Local Cinque Terre trains are frequent and take only a few minutes between villages — Vernazza to Manarola is normally about 6-8 minutes." },
       { time: "12:15pm", name: "Manarola — marina & Punta Bonfiglio", cantMiss: true, duration: "~3 hrs", access: "outside", coords: [44.1063,9.7280], gettingHere: "5 min walk down from the station to the marina", desc: "The village most worth lingering in. Walk down toward the marina, then follow the path around Punta Bonfiglio to the famous viewpoint looking back over Manarola's stacked houses and the sea — one of the defining images of the Cinque Terre. Afterward, wander the upper streets and vineyard terraces above town.", mapLink: "https://www.google.com/maps/search/?api=1&query=Punta+Bonfiglio+Manarola" },
-      { time: "1:00pm", name: "Lunch — Manarola", type: "meal", coords: [44.1055,9.7275], desc: "Lunch with a view, ideally near the Punta Bonfiglio path or the marina. Restaurant TBD." },
+      { time: "1:00pm", name: "Lunch — Manarola", type: "meal", coords: [44.1055,9.7275], desc: "Lunch with a view, ideally near the Punta Bonfiglio path or the marina. Restaurant TBD." , "gettingHere": "Right there on the Punta Bonfiglio path or back at the marina"},
       { section: "RIOMAGGIORE" },
-      { time: "~3:15pm", name: "Train to Riomaggiore", type: "transport", coords: [44.100655,9.736212], gettingHere: "Back to Manarola station, without rushing", desc: "Another short hop of a few minutes." },
-      { time: "3:30pm", name: "Riomaggiore — Via Colombo & the harbor", cantMiss: true, duration: "~4 hrs", access: "outside", coords: [44.0998,9.7382], gettingHere: "Walk through the pedestrian tunnel from the station into town", desc: "The largest of the three villages today, with a proper working harbor. Explore Via Colombo, the main pedestrian street, then walk down to the marina and harbor viewpoint for sunset light on the cliffs.", tip: "If the Via dell'Amore (the cliffside path to Manarola) is running on the same rules in 2027 — currently one-way from Riomaggiore, ~30 min, timed reservation required — it could replace the Manarola-Riomaggiore train leg entirely. Worth checking closer to the date rather than building the plan around it now.", mapLink: "https://www.google.com/maps/search/?api=1&query=Via+Colombo+Riomaggiore" },
-      { time: "6:15pm", name: "Dinner — Riomaggiore", type: "meal", coords: [44.0998,9.7382], desc: "Early dinner, ~6:15-7:15pm, so there's no rush getting back to the last comfortable train. Restaurant TBD." },
-      { time: "~7:45pm", name: "Train back to Livorno Centrale", type: "transport", coords: [43.55417,10.33583], gettingHere: "Riomaggiore station", desc: "Return journey via La Spezia, arriving Livorno Centrale roughly 9:15-9:45pm.", warning: "The ship stays overnight, so there's no hard cruise deadline today — but avoid the very last train of the evening. Target being back onboard by ~10:00pm." },
-      { time: "~9:30pm", name: "Taxi back to the ship", type: "transport", coords: [43.5557,10.3026], gettingHere: "Livorno Centrale", desc: "Taxi from the station back to the ship or cruise terminal." },
+      { time: "~3:15pm", name: "Train to Riomaggiore", type: "transport", coords: [44.100655,9.736212], gettingHere: "~5 min walk back to Manarola station, then a short train hop", desc: "Another short hop of a few minutes." },
+      { time: "3:30pm", name: "Riomaggiore — Via Colombo & the harbor", cantMiss: true, duration: "~4 hrs", access: "outside", coords: [44.0998,9.7382], gettingHere: "~3 min walk through the pedestrian tunnel from the station into town", desc: "The largest of the three villages today, with a proper working harbor. Explore Via Colombo, the main pedestrian street, then walk down to the marina and harbor viewpoint for sunset light on the cliffs.", tip: "If the Via dell'Amore (the cliffside path to Manarola) is running on the same rules in 2027 — currently one-way from Riomaggiore, ~30 min, timed reservation required — it could replace the Manarola-Riomaggiore train leg entirely. Worth checking closer to the date rather than building the plan around it now.", mapLink: "https://www.google.com/maps/search/?api=1&query=Via+Colombo+Riomaggiore" },
+      { time: "6:15pm", name: "Dinner — Riomaggiore", type: "meal", coords: [44.0998,9.7382], desc: "Early dinner, ~6:15-7:15pm, so there's no rush getting back to the last comfortable train. Restaurant TBD." , "gettingHere": "Wherever looks good along Via Colombo or the harbor"},
+      { time: "~7:45pm", name: "Train back to Livorno Centrale", type: "transport", coords: [43.55417,10.33583], gettingHere: "~3 min walk to Riomaggiore station, board the train back toward La Spezia", desc: "Return journey via La Spezia, arriving Livorno Centrale roughly 9:15-9:45pm.", warning: "The ship stays overnight, so there's no hard cruise deadline today — but avoid the very last train of the evening. Target being back onboard by ~10:00pm." },
+      { time: "~9:30pm", name: "Taxi back to the ship", type: "transport", coords: [43.5557,10.3026], gettingHere: "~15-20 min taxi from Livorno Centrale back to the ship", desc: "Taxi from the station back to the ship or cruise terminal." },
     ]
   },
   { date: new Date(2027,5,24), block: "cruise", title: "Livorno — Pisa & Lucca",
@@ -726,21 +769,22 @@ const days = [
     driverToday: false,
     stops: [
       { time: "6:45am", name: "Breakfast — onboard", type: "meal", desc: "Early breakfast, ~6:45-7:15am." },
-      { time: "7:45am", name: "Taxi directly to Piazza dei Miracoli", type: "transport", timeSensitive: true, coords: [43.5557,10.3026], gettingHere: "Walk off the ship, 7:35am", desc: "A taxi straight to Pisa, skipping Livorno Centrale entirely — this is the time-sensitive departure day, so the route is built to remove every avoidable connection.", warning: "Arrange this with Celebrity Guest Relations on June 23: a taxi for four from the ship (or the official cruise taxi point) directly to Piazza dei Miracoli at 7:45am." },
+      { time: "7:45am", name: "Taxi directly to Piazza dei Miracoli", type: "transport", timeSensitive: true, coords: [43.5557,10.3026], gettingHere: "Walk off the ship at 7:35am, prearranged taxi waiting (~25-30 min drive to Pisa)", desc: "A taxi straight to Pisa, skipping Livorno Centrale entirely — this is the time-sensitive departure day, so the route is built to remove every avoidable connection.", warning: "Arrange this with Celebrity Guest Relations on June 23: a taxi for four from the ship (or the official cruise taxi point) directly to Piazza dei Miracoli at 7:45am." },
       { section: "PISA" },
       { time: "8:25am", name: "Arrive Piazza dei Miracoli — exterior photos", duration: "~15 min", access: "outside", coords: [43.722952,10.396576], desc: "A few minutes for exterior photos of the Tower before the crowds build, ahead of the timed climb.", mapLink: "https://www.google.com/maps/search/?api=1&query=Piazza+dei+Miracoli+Pisa" },
-      { time: "9:00am", name: "Leaning Tower — timed climb", cantMiss: true, timeSensitive: true, duration: "~45 min", access: "ticketed", coords: [43.722952,10.396576], desc: "The bell tower of Pisa Cathedral, tilting since construction began in 1173 due to a shallow foundation in soft ground — 296 steps up a structure that's still, remarkably, standing. Pisa currently uses timed, limited-capacity entry; children who haven't turned eight by year's end aren't permitted inside, and eligible minors need an adult with them.", warning: "Confirm the exact age rule and 2027 opening time before purchasing — this changes periodically.", ticket: "Timed-entry ticket — book in advance" },
-      { time: "9:45am", name: "Pisa Baptistery", duration: "~15 min", access: "ticketed", coords: [43.7233,10.3956], gettingHere: "Right on the piazza", desc: "The largest baptistery in Italy, its curious two-tone dome blending Romanesque and Gothic styles from its centuries-long construction. Famous for its acoustics — a note sung inside will hang in the air for nearly ten seconds.", mapLink: "https://www.google.com/maps/search/?api=1&query=Pisa+Baptistery" },
-      { time: "10:00am", name: "Pisa Cathedral", duration: "~30 min", access: "free", coords: [43.7231,10.3959], gettingHere: "Same piazza", desc: "Consecrated in 1118, the cathedral that started the whole Piazza dei Miracoli complex — its striped marble facade became the template for Romanesque churches across Tuscany.", mapLink: "https://www.google.com/maps/search/?api=1&query=Pisa+Cathedral" },
+      { time: "9:00am", name: "Leaning Tower — timed climb", cantMiss: true, timeSensitive: true, duration: "~45 min", access: "ticketed", coords: [43.722952,10.396576], desc: "The bell tower of Pisa Cathedral, tilting since construction began in 1173 due to a shallow foundation in soft ground — 296 steps up a structure that's still, remarkably, standing. Pisa currently uses timed, limited-capacity entry; children who haven't turned eight by year's end aren't permitted inside, and eligible minors need an adult with them.", warning: "Confirm the exact age rule and 2027 opening time before purchasing — this changes periodically.", ticket: "Timed-entry ticket — book in advance" , "gettingHere": "~1 min walk, same spot"},
+      { time: "9:45am", name: "Pisa Baptistery", duration: "~15 min", access: "ticketed", coords: [43.7233,10.3956], gettingHere: "~1 min walk, right on the piazza", desc: "The largest baptistery in Italy, its curious two-tone dome blending Romanesque and Gothic styles from its centuries-long construction. Famous for its acoustics — a note sung inside will hang in the air for nearly ten seconds.", mapLink: "https://www.google.com/maps/search/?api=1&query=Pisa+Baptistery" },
+      { time: "10:00am", name: "Pisa Cathedral", duration: "~30 min", access: "free", coords: [43.7231,10.3959], gettingHere: "~1 min walk, same piazza", desc: "Consecrated in 1118, the cathedral that started the whole Piazza dei Miracoli complex — its striped marble facade became the template for Romanesque churches across Tuscany.", mapLink: "https://www.google.com/maps/search/?api=1&query=Pisa+Cathedral" },
       { time: "10:30am", name: "Walk to Pisa San Rossore station", type: "transport", coords: [43.7239556,10.3879000], gettingHere: "~10-15 min walk from the Tower", desc: "Pisa's second station, much closer to the Tower than Pisa Centrale, with direct regional trains to Lucca." },
-      { time: "~11:00am", name: "Train to Lucca", type: "transport", coords: [43.838490,10.507736], gettingHere: "Pisa San Rossore", desc: "Direct regional train, ~21-26 minutes, frequent departures." },
+      { time: "~11:00am", name: "Train to Lucca", type: "transport", coords: [43.838490,10.507736], gettingHere: "Board the train at Pisa San Rossore", desc: "Direct regional train, ~21-26 minutes, frequent departures." },
       { section: "LUCCA" },
-      { time: "11:35am", name: "Porta San Pietro & the city walls", duration: "~20 min", access: "free", coords: [43.8398,10.5058], gettingHere: "The station sits right outside the southern walls", desc: "Lucca's intact Renaissance walls — never breached in battle, later converted into a tree-shaded promenade that still fully encircles the old city. Enter through Porta San Pietro and walk a short stretch of the walls, without attempting the complete 4+ km circuit.", mapLink: "https://www.google.com/maps/search/?api=1&query=Porta+San+Pietro+Lucca" },
-      { time: "12:00pm", name: "Lunch — near Piazza San Michele", type: "meal", coords: [43.8420,10.5035], gettingHere: "Walk in toward Piazza San Michele", desc: "Keep it to about 45-50 minutes rather than a long Tuscan lunch — the afternoon is tight. Restaurant TBD." },
-      { time: "12:50pm", name: "Historic center: Via Fillungo → Piazza dell'Anfiteatro → Torre Guinigi", cantMiss: true, duration: "~55 min", access: "outside", coords: [43.8412,10.5057], gettingHere: "From Piazza San Michele", desc: "Via Fillungo is Lucca's main pedestrian street; it opens onto the oval Piazza dell'Anfiteatro, its ring of buildings tracing the exact footprint of a 2nd-century Roman amphitheater still buried beneath. Torre Guinigi, the city's signature medieval tower, is topped — improbably — by a small rooftop garden with live holm oak trees. Viewing from outside only today; it's 230 steps, and you'll already have climbed the Leaning Tower this morning.", mapLink: "https://www.google.com/maps/search/?api=1&query=Piazza+dell%27Anfiteatro+Lucca" },
-      { time: "1:45pm", name: "Walk past: Lucca Cathedral (San Martino)", duration: "10 min", access: "outside", coords: [43.8410,10.5057], gettingHere: "On the way back to Porta San Pietro", desc: "A brief pass-by on the way back — not a full stop today, just worth seeing from outside.", mapLink: "https://www.google.com/maps/search/?api=1&query=Lucca+Cathedral+San+Martino" },
-      { time: "2:15pm", name: "Private transfer — Porta San Pietro", type: "transport", cantMiss: true, timeSensitive: true, coords: [43.8398,10.5058], gettingHere: "Back to Porta San Pietro, ~15-20 min walk from the historic center", desc: "The prearranged Lucca Taxi pickup, direct to the ship — this is the one moment today that can't slip.", warning: "Keep this 2:15pm pickup firm. A normal ride puts you at the port ~3:00-3:15pm, even allowing for a drop at the official cruise terminal or shuttle point rather than the ship itself." },
-      { time: "~3:30pm", name: "Back onboard", type: "transport", timeSensitive: true, coords: [43.5557,10.3026], gettingHere: "Livorno cruise terminal, via shuttle if needed", desc: "Livorno's cruise operator runs passenger shuttles during the ship's stay, plus taxi and chauffeur desks at the terminal.", warning: "Check the actual all-aboard time in Celebrity's daily program — it governs. This plan targets being onboard roughly 90 minutes before the ship sails." },
+      { time: "11:35am", name: "Porta San Pietro & the city walls", duration: "~20 min", access: "free", coords: [43.8398,10.5058], gettingHere: "~2 min walk — the station sits right outside the southern walls", desc: "Lucca's intact Renaissance walls — never breached in battle, later converted into a tree-shaded promenade that still fully encircles the old city. Enter through Porta San Pietro and walk a short stretch of the walls, without attempting the complete 4+ km circuit.", mapLink: "https://www.google.com/maps/search/?api=1&query=Porta+San+Pietro+Lucca" },
+      { time: "12:00pm", name: "Lunch — near Piazza San Michele", type: "meal", coords: [43.8420,10.5035], gettingHere: "~5 min walk in toward Piazza San Michele", desc: "Keep it to about 45-50 minutes rather than a long Tuscan lunch — the afternoon is tight. Restaurant TBD." },
+      { time: "12:50pm", name: "Historic center: Via Fillungo → Piazza dell'Anfiteatro → Torre Guinigi", cantMiss: true, duration: "~55 min", access: "outside", coords: [43.8412,10.5057], gettingHere: "~5 min walk from Piazza San Michele", desc: "Via Fillungo is Lucca's main pedestrian street; it opens onto the oval Piazza dell'Anfiteatro, its ring of buildings tracing the exact footprint of a 2nd-century Roman amphitheater still buried beneath. Torre Guinigi, the city's signature medieval tower, is topped — improbably — by a small rooftop garden with live holm oak trees. Viewing from outside only today; it's 230 steps, and you'll already have climbed the Leaning Tower this morning.", mapLink: "https://www.google.com/maps/search/?api=1&query=Piazza+dell%27Anfiteatro+Lucca" },
+      { time: "1:45pm", name: "Walk past: Lucca Cathedral (San Martino)", duration: "10 min", access: "outside", coords: [43.8410,10.5057], gettingHere: "~10 min walk on the way back to Porta San Pietro", desc: "A brief pass-by on the way back — not a full stop today, just worth seeing from outside.", mapLink: "https://www.google.com/maps/search/?api=1&query=Lucca+Cathedral+San+Martino" },
+      { time: "2:15pm", name: "Private transfer — Porta San Pietro", type: "transport", cantMiss: true, timeSensitive: true, critical: true, coords: [43.8398,10.5058], gettingHere: "~15-20 min walk back to Porta San Pietro from the historic center", desc: "The prearranged Lucca Taxi pickup, direct to the ship — this is the one moment today that can't slip.", warning: "Keep this 2:15pm pickup firm. A normal ride puts you at the port ~3:00-3:15pm, even allowing for a drop at the official cruise terminal or shuttle point rather than the ship itself." },
+      { time: "~3:30pm", name: "Back onboard", critical: true, type: "transport", timeSensitive: true, coords: [43.5557,10.3026], gettingHere: "~15-20 min drive to Livorno cruise terminal, via shuttle if needed", desc: "Livorno's cruise operator runs passenger shuttles during the ship's stay, plus taxi and chauffeur desks at the terminal.", warning: "Check the actual all-aboard time in Celebrity's daily program — it governs. This plan targets being onboard roughly 90 minutes before the ship sails." },
+      { time: "Evening", name: "Dinner — onboard", type: "meal", desc: "Ship departs Livorno at 5:00pm; dinner onboard as you sail." , "gettingHere": "You're back on the ship for the evening"},
     ]
   },
   { date: new Date(2027,5,25), block: "rome", title: "Disembark Civitavecchia → Rome", sub: "Transfer ~70-90 min, check in Domus 21 Luxury Suites (confirmed).",
@@ -749,7 +793,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — onboard", type: "meal", desc: "Last breakfast on the ship." },
+      { time: "Lunch", name: "Lunch — TBD, Rome", type: "meal", desc: "TBD, after disembarking and checking in." , "gettingHere": "TBD, after disembarking and checking in"},
+      { time: "Dinner", name: "Dinner — TBD, Rome", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+    ]
   },
   { date: new Date(2027,5,26), block: "rome", title: "Rome: Colosseum, Forum, Palatine", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
@@ -757,7 +805,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — TBD", type: "meal", desc: "Domus 21 is room-only, no breakfast included — plan for a nearby café." },
+      { time: "Lunch", name: "Lunch — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+      { time: "Dinner", name: "Dinner — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+    ]
   },
   { date: new Date(2027,5,27), block: "rome", title: "Rome: Vatican", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
@@ -765,7 +817,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — TBD", type: "meal", desc: "Domus 21 is room-only, no breakfast included — plan for a nearby café." },
+      { time: "Lunch", name: "Lunch — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+      { time: "Dinner", name: "Dinner — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+    ]
   },
   { date: new Date(2027,5,28), block: "rome", title: "Rome: Trevi, Pantheon, Spanish Steps", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
@@ -773,7 +829,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — TBD", type: "meal", desc: "Domus 21 is room-only, no breakfast included — plan for a nearby café." },
+      { time: "Lunch", name: "Lunch — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+      { time: "Dinner", name: "Dinner — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+    ]
   },
   { date: new Date(2027,5,29), block: "rome", title: "Rome: free day", sub: "Planning not started for this day yet.",
     cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
@@ -781,7 +841,11 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Breakfast", name: "Breakfast — TBD", type: "meal", desc: "Domus 21 is room-only, no breakfast included — plan for a nearby café." },
+      { time: "Lunch", name: "Lunch — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+      { time: "Dinner", name: "Dinner — TBD", type: "meal", desc: "TBD." , "gettingHere": "TBD"},
+    ]
   },
   { date: new Date(2027,5,30), block: "rome", title: "Fly home — Rome → Miami", sub: "Return flight not yet booked (est. ~$3,200 cash).",
     cityPins: [{"lat":41.9028,"lng":12.4964,"name":"Rome"}],
@@ -789,115 +853,152 @@ const days = [
     routeUrl: null,
     townRoutes: null,
     driverToday: false,
-    stops: []
+    stops: [
+      { time: "Morning", name: "Breakfast — near the airport", type: "meal", desc: "Likely grabbed near FCO before check-in, depending on the flight time once booked." },
+      { time: "TBD", name: "Uber XXL — hotel to FCO", type: "transport", desc: "Book ahead in the Uber app once the return flight is confirmed — 4 passengers plus luggage needs the larger vehicle.", ticket: "Book ahead in the Uber app" , "gettingHere": "Book ahead once the return flight time is confirmed"},
+      { time: "TBD", name: "Return flight — FCO to MIA", type: "transport", icon: "✈️", desc: "Not yet booked. Est. ~$3,200 cash." , "gettingHere": "At FCO, proceed to check-in and security"},
+      { time: "In-flight", name: "Lunch — on the flight", type: "meal", desc: "Lunch served on board." , "gettingHere": "Served on board"},
+    ]
   },
 ];
 
 const bookings = {
   "attractions": [
-    {
-      "what": "Accademia Gallery (David)",
-      "status": "tobook",
-      "meta": "HIGHEST PRIORITY — 6-8 wks ahead · Jun 7"
-    },
-    {
-      "what": "Santa Maria Novella interior",
-      "status": "tobook",
-      "meta": "Low urgency · Jun 7"
-    },
-    {
-      "what": "Brunelleschi Pass (Dome + Baptistery)",
-      "status": "tobook",
-      "meta": "HIGH — sells out 2-4 wks ahead · Jun 7"
-    },
-    {
-      "what": "Uffizi Gallery",
-      "status": "tobook",
-      "meta": "HIGH — 4-6 wks ahead · Jun 8"
-    },
-    {
-      "what": "Santa Croce",
-      "status": "tobook",
-      "meta": "Low urgency, ~€8 · Jun 8"
-    },
-    {
-      "what": "Palazzo Pitti + Boboli combo",
-      "status": "tobook",
-      "meta": "A couple weeks ahead · Jun 8"
-    },
-    {
-      "what": "Siena OPA SI Pass (Duomo, Battistero, Facciatone)",
-      "status": "tobook",
-      "meta": "Days ahead, skip queues · Jun 12"
-    },
-    {
-      "what": "San Gimignano Duomo (Collegiata)",
-      "status": "tobook",
-      "meta": "Low urgency, ~€5 · Jun 12"
-    },
-    {
-      "what": "Ravenna 5-monument pass",
-      "status": "tobook",
-      "meta": "HIGH — Galla Placidia timed-entry, sells out weeks ahead · Jun 14"
-    },
-    {
-      "what": "T Fondaco Rooftop Terrace",
-      "status": "tobook",
-      "meta": "Free, but slots go — book ahead · Jun 10"
-    },
-    {
-      "what": "Santa Maria dei Miracoli",
-      "status": "tobook",
-      "meta": "~€3/adult, small church · Jun 10"
-    },
-    {
-      "what": "Scala Contarini del Bovolo",
-      "status": "tobook",
-      "meta": "Small fee, confirm on-site · Jun 10"
-    },
-    {
-      "what": "Gondola, Bacino Orseolo",
-      "status": "tobook",
-      "meta": "~€90/30 min, fixed rate · Jun 10"
-    },
-    {
-      "what": "Wave Murano Glass — guided tour",
-      "status": "tobook",
-      "meta": "~€29/pp, books out ~1 month ahead · Jun 11"
-    }
-  ],
+  {"what": "Campanile di Giotto \u2014 climb", "status": "booked", "meta": "Part of Duomo complex pass \u2014 no advance booking needed \u00b7 Jun 7"},
+  {
+    "what": "Accademia Gallery \u2014 David",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 book 6-8 weeks ahead \u00b7 Jun 7"
+  },
+  {
+    "what": "Santa Maria Novella",
+    "status": "tobook",
+    "meta": "~\u20ac7.50 \u00b7 Jun 7"
+  },
+  {
+    "what": "Uffizi Gallery",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 book 4-6 weeks ahead \u00b7 Jun 8"
+  },
+  {
+    "what": "Santa Croce",
+    "status": "tobook",
+    "meta": "~\u20ac8 \u00b7 Jun 8"
+  },
+  {
+    "what": "Palazzo Pitti + Boboli Gardens (optional)",
+    "status": "tobook",
+    "meta": "Pick one or the other \u00b7 Jun 8"
+  },
+  {
+    "what": "Archiginnasio (Anatomical Theatre)",
+    "status": "tobook",
+    "meta": "Small fee \u00b7 Jun 9"
+  },
+  {
+    "what": "Santa Maria dei Miracoli",
+    "status": "tobook",
+    "meta": "~\u20ac3/adult \u00b7 Jun 10"
+  },
+  {
+    "what": "Scala Contarini del Bovolo",
+    "status": "tobook",
+    "meta": "Small fee, confirm on-site \u00b7 Jun 10"
+  },
+  {
+    "what": "Wave Murano Glass \u2014 guided tour",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 ~\u20ac29/pp, books out ~1 month ahead \u00b7 Jun 11"
+  },
+  {
+    "what": "Siena OPA SI Pass (Duomo, Battistero, Facciatone)",
+    "status": "tobook",
+    "meta": "Book a few days ahead \u00b7 Jun 12"
+  },
+  {
+    "what": "Duomo di San Gimignano (Collegiata)",
+    "status": "tobook",
+    "meta": "~\u20ac5 \u00b7 Jun 12"
+  },
+  {
+    "what": "Ravenna combined pass (San Vitale + Sant'Apollinare Nuovo)",
+    "status": "tobook",
+    "meta": "Jun 14"
+  },
+  {
+    "what": "Mausoleum of Galla Placidia",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 mandatory timed-entry, sells out weeks ahead \u00b7 Jun 14"
+  },
+  {
+    "what": "Leaning Tower of Pisa \u2014 timed climb",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 timed-entry, confirm 2027 age rules \u00b7 Jun 24"
+  },
+  {
+    "what": "Pisa Baptistery",
+    "status": "tobook",
+    "meta": "Jun 24"
+  }
+],
   "transport": [
-    {
-      "what": "AA38 Miami → Rome (overnight)",
-      "status": "booked",
-      "meta": "Miles+$22.40 · Jun 5"
-    },
-    {
-      "what": "Leonardo Express + Frecciarossa to Florence",
-      "status": "tobook",
-      "meta": "Once schedule releases · Jun 6"
-    },
-    {
-      "what": "Frecciarossa Firenze ↔ Bologna",
-      "status": "tobook",
-      "meta": "~35 min each way · Jun 9"
-    },
-    {
-      "what": "Frecciarossa Firenze ↔ Venezia S. Lucia",
-      "status": "tobook",
-      "meta": "~2 hr each way · Jun 10-11"
-    },
-    {
-      "what": "Truescany private driver",
-      "status": "booked",
-      "meta": "€3,078 by card, charged ~11 days before · Jun 12-14"
-    },
-    {
-      "what": "Return flight FCO → MIA",
-      "status": "tobook",
-      "meta": "Est. ~$3,200 cash · Jun 30"
-    }
-  ],
+  {"what": "Vaporetto \u2014 Venice \u2194 Murano", "status": "booked", "meta": "Public transit, pay on board \u2014 no advance booking needed \u00b7 Jun 11"},
+  {
+    "what": "AA52 — Miami to Rome",
+    "status": "booked",
+    "meta": "Booked on miles · departs 8:00pm · Jun 5"
+  },
+  {
+    "what": "Uber XXL \u2014 home to MIA",
+    "status": "tobook",
+    "meta": "Book ahead in the Uber app \u00b7 Jun 5"
+  },
+  {
+    "what": "Leonardo Express + Frecciarossa \u2014 FCO to Florence",
+    "status": "tobook",
+    "meta": "Book once June 2027 schedule releases \u00b7 Jun 6"
+  },
+  {
+    "what": "Frecciarossa \u2014 Firenze \u2194 Bologna",
+    "status": "tobook",
+    "meta": "~35 min each way \u00b7 Jun 9"
+  },
+  {
+    "what": "Frecciarossa \u2014 Firenze \u2194 Venezia S. Lucia",
+    "status": "tobook",
+    "meta": "~2 hr each way \u00b7 Jun 10-11"
+  },
+  {
+    "what": "Truescany private driver",
+    "status": "booked",
+    "meta": "\u20ac3,078 by card, charged ~11 days before \u00b7 Jun 12-14"
+  },
+  {
+    "what": "Trains \u2014 Livorno \u2194 Vernazza \u2194 Cinque Terre villages",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 book once June 2027 schedule releases \u00b7 Jun 23"
+  },
+  {
+    "what": "Taxi \u2014 Pisa, arranged via Celebrity Guest Relations",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 arrange onboard June 23, for 7:45am June 24 \u00b7 Jun 24"
+  },
+  {
+    "what": "Train \u2014 Pisa San Rossore to Lucca",
+    "status": "tobook",
+    "meta": "Frequent departures, no advance booking needed \u00b7 Jun 24"
+  },
+  {
+    "what": "Private transfer \u2014 Lucca Taxi, Porta San Pietro",
+    "status": "tobook",
+    "meta": "HIGH PRIORITY \u2014 confirm the 2:15pm pickup in advance \u00b7 Jun 24"
+  },
+  {
+    "what": "Return flight \u2014 FCO to MIA",
+    "status": "tobook",
+    "meta": "Est. ~$3,200 cash, not yet booked \u00b7 Jun 30"
+  }
+],
   "hotels": [
     {
       "what": "Hotel Davanzati — Junior Suite, Florence",
@@ -1027,8 +1128,8 @@ const bookings = {
   {
     "date": "Jun 23",
     "b": "\u2705 Cruise",
-    "l": "TBD, Cinque Terre",
-    "d": "\u2705 Cruise"
+    "l": "TBD, Manarola",
+    "d": "TBD, Riomaggiore (ashore — ship stays overnight)"
   },
   {
     "date": "Jun 24",
@@ -1151,10 +1252,11 @@ const infoData = {
 
 
 // ======================= RENDER =======================
-const CATEGORY_COLORS = { attraction: '#33333A', meal: '#D97757', transport: '#5B7A9D', hotel: '#C9861A' };
-const CATEGORY_LABELS = { attraction: 'Attractions', meal: 'Meals', transport: 'Transport', hotel: 'Hotel / Base' };
+const CATEGORY_COLORS = { attraction: '#33333A', meal: '#D97757', transport: '#0EA5E9', hotel: '#C9861A', critical: '#E5484D' };
+const CATEGORY_LABELS = { attraction: 'Attractions', meal: 'Meals', transport: 'Transport', hotel: 'Hotel / Base', critical: 'Critical — don\'t be late' };
 function categoryOf(s){
   if (s.__isHotel) return 'hotel';
+  if (s.critical) return 'critical';
   if (s.type === 'meal') return 'meal';
   if (s.type === 'transport') return 'transport';
   return 'attraction';
@@ -1175,7 +1277,7 @@ const today = new Date();
 const blockAbbrev = { florence: "FLR", cruise: "SEA", rome: "ROM" };
 
 const leadingSpacer = document.createElement('div');
-leadingSpacer.style.cssText = 'flex:0 0 auto; width:9px; scroll-snap-align:start;';
+leadingSpacer.style.cssText = 'flex:0 0 auto; width:2px; scroll-snap-align:start;';
 strip.appendChild(leadingSpacer);
 
 let prevBlock = null;
@@ -1239,15 +1341,16 @@ days.forEach((day, i) => {
       return;
     }
     if (s.type === 'transport'){
+      const critClass = s.critical ? ' critical' : '';
       stopsHtml += `
         ${gettingHtml}
-        <div class="timeline-item transport">
+        <div class="timeline-item transport${critClass}">
           <div class="rail"><div class="rail-dot"></div><div class="rail-line"></div></div>
-          <div class="stop transport" id="stop-${i}-${si}">
+          <div class="stop transport${critClass}" id="stop-${i}-${si}">
             <div class="stop-head" onclick="toggleStop(${i},${si})">
               <div class="stop-time">${s.time || ''}</div>
               <div class="stop-main">
-                <div class="stop-name">${numBadge}<span class="transport-icon">${s.icon || '🚗'}</span>${s.name}</div>
+                <div class="stop-name">${numBadge}<span class="transport-icon">${s.icon || (s.critical ? '🚨' : '🚗')}</span>${s.name}</div>
                 <div class="stop-meta">
                   ${s.timeSensitive ? `<span class="badge timesensitive">⏰ Time Sensitive</span>` : ''}
                   ${s.mapLink ? `<a class="maps-chip" href="${s.mapLink}" onclick="event.stopPropagation()">📍 Maps</a>` : ''}
@@ -1330,7 +1433,7 @@ days.forEach((day, i) => {
   ).join('');
   let mapsCardHtml = '';
   if (hasMapPoints || day.routeUrl) {
-    const toggles = ['Full day', ...townsInDay];
+    const toggles = townsInDay.length > 0 ? ['Full day', ...townsInDay] : [];
     mapsCardHtml = `
       <div class="intro-card maps-card" id="mapsCard-${i}">
         <div class="intro-head" onclick="toggleMapsCard(${i})">
@@ -1341,12 +1444,12 @@ days.forEach((day, i) => {
         <div class="intro-body">
           <div class="intro-body-inner">
             ${hasMapPoints ? `
-            <div class="map-toggle-row">
+            ${toggles.length ? `<div class="seg-toggle map-toggle-row">
               ${toggles.map((t, ti) => `<button class="map-toggle-btn ${ti===0?'active':''}" onclick="setDayMapFilter(${i},'${t}',this)">${t}</button>`).join('')}
-            </div>
+            </div>` : ''}
             <div class="day-map" id="dayMap-${i}"></div>
             <div class="map-legend">${dayLegendHtml}</div>` : ''}
-            ${day.routeUrl ? `<a class="route-link" href="${day.routeUrl}">🗺️ Open full day route in Google Maps</a>` : ''}
+            ${day.routeUrl ? `<a class="route-link secondary full-route" href="${day.routeUrl}">🗺️ Full Day Route</a>` : ''}
             ${townRoutesHtml}
           </div>
         </div>
@@ -1516,9 +1619,9 @@ function renderMenuTab(tab){
 
 function renderItinTab(mode){
   const toggle = `
-    <div class="itin-subtoggle">
-      <button class="subtab ${mode==='list'?'active':''}" onclick="switchItinMode('list')">List</button>
-      <button class="subtab ${mode==='map'?'active':''}" onclick="switchItinMode('map')">Map</button>
+    <div class="seg-toggle itin-subtoggle">
+      <button class="${mode==='list'?'active':''}" onclick="switchItinMode('list')">List</button>
+      <button class="${mode==='map'?'active':''}" onclick="switchItinMode('map')">Map</button>
     </div>`;
   if (mode === 'map'){
     return toggle + `
@@ -1587,7 +1690,7 @@ function renderItineraryList(){
 function renderBookingsTab(activeSub){
   const subs = ['attractions','transport','hotels','meals'];
   const subLabels = { attractions:'Attractions', transport:'Transport', hotels:'Hotels', meals:'Meals' };
-  let tabsHtml = `<div class="subtabs">` + subs.map(s =>
+  let tabsHtml = `<div class="seg-toggle subtabs">` + subs.map(s =>
     `<button class="subtab ${s===activeSub?'active':''}" onclick="renderSub('${s}')">${subLabels[s]}</button>`
   ).join('') + `</div>`;
   let rowsHtml = `<div id="bookingRows">` + bookingRowsHtml(activeSub) + `</div>`;
