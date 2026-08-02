@@ -1173,6 +1173,10 @@ const container = document.getElementById('dayContainer');
 const today = new Date();
 const blockAbbrev = { florence: "FLR", cruise: "SEA", rome: "ROM" };
 
+const leadingSpacer = document.createElement('div');
+leadingSpacer.style.cssText = 'flex:0 0 auto; width:9px;';
+strip.appendChild(leadingSpacer);
+
 let prevBlock = null;
 days.forEach((day, i) => {
   // block separator label, inserted whenever the block changes (skip for "prelude" — no label needed before it)
