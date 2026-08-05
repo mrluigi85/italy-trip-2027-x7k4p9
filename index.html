@@ -928,7 +928,7 @@ const days = [
     stops: [
       { time: "Morning", name: "Breakfast — near the airport or hotel", type: "meal", desc: "Before heading to FCO for the 1:30pm departure." },
       { time: "~10:15-10:30am", name: "Uber XXL — hotel to FCO", type: "transport", coords: [41.89606,12.47825], mapLink: "https://www.google.com/maps/search/?api=1&query=41.89606,12.47825", desc: "Book ahead in the Uber app — 4 passengers plus luggage needs the larger vehicle. Targets arrival at FCO ~3 hours before the 1:30pm departure.", ticket: "Book ahead in the Uber app" , "gettingHere": "Book ahead once you're ready to head to the airport"},
-      { time: "1:30pm", name: "AA 53 — Rome to Miami", type: "transport", icon: "✈️", coords: [41.8003,12.2389], mapLink: "https://www.google.com/maps/search/?api=1&query=41.8003,12.2389", desc: "FCO to MIA, arrives 6:05pm. Total cost for all passengers: $2,570.32.", ticket: "<a href=\"https://www.aa.com\" target=\"_blank\">Open American Airlines app</a>" , "gettingHere": "At FCO, proceed to check-in and security"},
+      { time: "1:30pm", name: "AA 53 — Rome to Miami", type: "transport", icon: "✈️", coords: [41.8003,12.2389], mapLink: "https://www.google.com/maps/search/?api=1&query=41.8003,12.2389", desc: "FCO to MIA, arrives 6:05pm. Booked as two separate reservations — Luis on his own PNR, Patricia/Luis Jr./Sofia on the original one — check in as two parties. Total cost for all passengers: $2,445.32 (a $125 travel credit applied by splitting the booking).", ticket: "<a href=\"https://www.aa.com\" target=\"_blank\">Open American Airlines app</a>" , "gettingHere": "At FCO, proceed to check-in and security"},
       { time: "In-flight", name: "Lunch — on the flight", type: "meal", desc: "Lunch served on board." , "gettingHere": "Served on board"},
     ]
   },
@@ -1068,7 +1068,7 @@ const bookings = {
   {
     "what": "AA 53 \u2014 Rome to Miami",
     "status": "booked",
-    "meta": "$2,570.32 total \u00b7 departs 1:30pm, arrives 6:05pm \u00b7 Jun 30"
+    "meta": "$2,445.32 total (split booking, $125 travel credit applied) \u00b7 departs 1:30pm, arrives 6:05pm \u00b7 Jun 30"
   }
 ],
   "hotels": [
@@ -1703,6 +1703,7 @@ function showDay(i){
   document.querySelectorAll('.chip').forEach(s => s.classList.remove('active'));
   const daySection = document.getElementById(`day-${i}`);
   if (daySection) daySection.style.display = 'block';
+  window.scrollTo(0, 0);
   const chip = document.querySelector(`.chip[data-idx="${i}"]`);
   if (chip){
     chip.classList.add('active');
